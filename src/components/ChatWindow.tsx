@@ -18,15 +18,37 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Scroll to bottom when messages change
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Scroll handling
+  const scrollToBottom = (behavior: 'smooth' | 'auto' = 'smooth') => {
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    }
+  };
+
+  // Check if scrolled to bottom
+  const handleScroll = () => {
+    if (messageListRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messageListRef.current;
+      const atBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
+      setIsAtBottom(atBottom);
+      if (atBottom) {
+        setUnreadCount(0);
+      }
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (isAtBottom) {
+      scrollToBottom();
+    } else {
+      setUnreadCount((prev) => prev + 1);
+    }
   }, [messages]);
 
   // Load message history when component mounts
@@ -35,23 +57,36 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
       if (!recipient?.userId || !user?.id) return;
       
       setIsLoading(true);
+      setError(null);
       try {
         const history = await getConversation(recipient.userId);
         
-        // Convert to ChatMessage format
+        // Convert to ChatMessage format with proper typing
         const chatMessages: ChatMessage[] = history.map((msg: any) => ({
+          id: msg.id,
           fromUserId: msg.fromUserId,
           toUserId: msg.toUserId,
           message: msg.message,
-          timestamp: msg.createdAt,
+          timestamp: new Date(msg.createdAt).toISOString(),
+          status: 'sent',
+          sender: msg.sender || {
+            id: msg.fromUserId,
+            firstName: msg.fromUserId === user.id ? user.firstName : recipient.firstName,
+            lastName: msg.fromUserId === user.id ? user.lastName : recipient.lastName,
+            role: msg.fromUserId === user.id ? user.role : recipient.role
+          }
         }));
         
         setMessages(chatMessages);
         
         // Mark messages as read
         await markMessagesAsRead(recipient.userId);
+        
+        // Scroll to bottom on initial load
+        setTimeout(() => scrollToBottom('auto'), 100);
       } catch (error) {
         console.error('Failed to load message history:', error);
+        setError('Failed to load messages. Please try refreshing.');
       } finally {
         setIsLoading(false);
       }
@@ -60,7 +95,7 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
     loadMessages();
   }, [recipient?.userId, user?.id]);
 
-  // Listen for incoming messages
+  // Listen for incoming messages and message status updates
   useEffect(() => {
     const handleNewMessage = (message: ChatMessage) => {
       // Only add messages from this conversation
@@ -70,14 +105,27 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
       ) {
         setMessages((prev) => {
           // Avoid duplicates
-          const exists = prev.some((m) => m.timestamp === message.timestamp && m.fromUserId === message.fromUserId);
+          const exists = prev.some((m) => 
+            (m.timestamp === message.timestamp && m.fromUserId === message.fromUserId) ||
+            (m.id && m.id === message.id)
+          );
           if (exists) return prev;
           return [...prev, message];
         });
       }
     };
 
+    const handleMessageStatus = (updatedMessage: ChatMessage) => {
+      setMessages((prev) => prev.map((msg) => 
+        msg.fromUserId === updatedMessage.fromUserId && 
+        msg.timestamp === updatedMessage.timestamp
+          ? { ...msg, status: updatedMessage.status }
+          : msg
+      ));
+    };
+
     socketService.onMessage(handleNewMessage);
+    socketService.onMessageSent(handleMessageStatus);
 
     // Cleanup listener on unmount
     return () => {
@@ -89,28 +137,96 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
     e.preventDefault();
     
     if (!messageText.trim() || !user) return;
+    setError(null);
+    
+    // Generate a temporary ID for the message
+    const tempId = `temp-${Date.now()}`;
+    const trimmedMessage = messageText.trim();
+    
+    // Clear input early for better UX
+    setMessageText('');
+    
+    // Ensure socket is connected
+    if (!socketService.getSocket()?.connected) {
+      try {
+        socketService.connect(user.id, {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        });
+        
+        // Wait for connection with timeout
+        await Promise.race([
+          new Promise((resolve) => {
+            const socket = socketService.getSocket();
+            if (socket?.connected) {
+              resolve(true);
+            } else {
+              socket?.once('connect', () => resolve(true));
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout')), 5000)
+          )
+        ]);
+      } catch (error) {
+        console.error('Socket connection error:', error);
+        setError('Failed to connect to chat server. Please check your connection.');
+        // Restore the message text
+        setMessageText(trimmedMessage);
+        return;
+      }
+    }
 
     setIsSending(true);
     
     try {
       // Create optimistic message
       const optimisticMessage: ChatMessage = {
+        id: tempId,
         fromUserId: user.id,
         toUserId: recipient.userId,
-        message: messageText.trim(),
+        message: trimmedMessage,
         timestamp: new Date().toISOString(),
+        status: 'pending',
+        sender: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
       };
 
-      // Add to UI immediately
-      setMessages((prev) => [...prev, optimisticMessage]);
+      // Add to UI immediately with pending state
+      const messageId = Date.now().toString();
+      setMessages((prev) => [...prev, { ...optimisticMessage, id: messageId }]);
       
-      // Send via socket
-      socketService.sendMessage(recipient.userId, messageText.trim(), user.id);
-      
-      // Clear input
+      // Clear input early for better UX
       setMessageText('');
+      
+      // Send via socket and wait for confirmation
+      const confirmedMessage = await socketService.sendMessage(
+        recipient.userId,
+        trimmedMessage,
+        user.id
+      );
+      
+      // Update the message status to sent
+      setMessages((prev) => prev.map((msg) => 
+        msg.id === messageId ? { ...confirmedMessage, status: 'sent' } : msg
+      ));
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Show error in UI
+      setMessages((prev) => prev.filter((msg) => msg.status !== 'pending'));
+      
+      // Restore the message text so user can try again
+      setMessageText(trimmedMessage);
+      
+      // Show error toast or feedback
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      alert(errorMessage); // Replace with your toast/notification system
     } finally {
       setIsSending(false);
     }
@@ -186,13 +302,33 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
                   }`}
                 >
                   <p className="text-sm break-words">{msg.message}</p>
-                  <p
-                    className={`text-xs mt-1 ${
-                      isOwnMessage ? 'text-primary-100' : 'text-gray-500'
-                    }`}
-                  >
-                    {formatMessageTime(msg.timestamp)}
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p
+                      className={`text-xs mt-1 ${
+                        isOwnMessage ? 'text-primary-100' : 'text-gray-500'
+                      }`}
+                    >
+                      {formatMessageTime(msg.timestamp)}
+                    </p>
+                    {isOwnMessage && (
+                      <span className="text-xs mt-1">
+                        {msg.status === 'pending' ? (
+                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : msg.status === 'sent' ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : msg.status === 'error' ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        ) : null}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -202,39 +338,49 @@ export default function ChatWindow({ recipient, onClose, embedded = false }: Cha
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSendMessage} className={`p-4 bg-white border-t border-gray-200 ${embedded ? '' : 'rounded-b-lg'}`}>
-        <div className="flex gap-2">
+      <div className={`p-4 bg-white border-t border-gray-100 ${embedded ? '' : 'rounded-b-lg'}`}>
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 p-2 rounded-lg text-xs mb-3">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSendMessage} className="relative">
           <input
             type="text"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+            placeholder="Type your message..."
+            className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm placeholder-gray-400"
             disabled={isSending}
             maxLength={500}
           />
           <button
             type="submit"
             disabled={!messageText.trim() || isSending}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary-600 hover:text-primary-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             aria-label="Send message"
           >
             {isSending ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 2L11 13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
           </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          {messageText.length}/500
-        </p>
-      </form>
+          <div className="absolute right-14 top-1/2 -translate-y-1/2">
+            <span className={`text-xs ${
+              messageText.length > 450 ? 'text-amber-500' : 'text-gray-400'
+            }`}>
+              {messageText.length}/500
+            </span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

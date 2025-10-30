@@ -2,16 +2,17 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider as NextAuthProvider } from '@/providers/AuthProvider';
 import { Toaster } from 'react-hot-toast';
-import ChatList from '@/components/ChatList';
+import FloatingChatButton from '@/components/FloatingChatButton';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Padel Court Booking System',
-  description: 'Professional padel court booking system with real-time updates',
+  title: 'Padel Club de Bujumbura',
+  description: 'The first Padel club in Burundi - Learn, Play, and Experience the fastest growing sport',
   manifest: '/manifest.json',
-  themeColor: '#3b82f6',
+  themeColor: '#16a34a',
 };
 
 export default function RootLayout({
@@ -22,34 +23,36 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <ChatList />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
+        <NextAuthProvider>
+          <AuthProvider>
+            {children}
+            <FloatingChatButton />
+            <Toaster
+              position="top-right"
+              toastOptions={{
                 duration: 4000,
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                style: {
+                  background: '#363636',
+                  color: '#fff',
                 },
-              },
-            }}
-          />
-        </AuthProvider>
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+          </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

@@ -1,38 +1,171 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { socketService, type OnlineUser } from '@/lib/socket';
-import { useAuth } from '@/contexts/AuthContext';
-import ChatWindow from './ChatWindow';
+import { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { io, Socket } from 'socket.io-client';
+import { Message } from '@/types/message';
+import { OnlineUser, User } from '@/types/user';
+import { FiMessageCircle, FiX } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 
 export default function ChatList() {
-  const { user } = useAuth();
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<OnlineUser | null>(null);
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState<OnlineUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<OnlineUser | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const socketRef = useRef<Socket>();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Initialize WebSocket connection
   useEffect(() => {
-    if (user) {
-      // Listen for online users updates
-      socketService.onOnlineUsers((users) => {
-        // Filter out current user
-        const otherUsers = users.filter((u) => u.userId !== user.id);
-        setOnlineUsers(otherUsers);
-      });
+    if (!session?.user) return;
+
+    socketRef.current = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || '', {
+      path: '/api/socketio',
+    });
+
+    // Join user's room
+    socketRef.current.emit('join', session.user.id);
+    socketRef.current.emit('online', session.user.id);
+
+    // Listen for new messages
+    socketRef.current.on('receive_message', (message: Message) => {
+      if (selectedUser?.id === message.senderId) {
+        setMessages((prev) => [...prev, message]);
+        toast.success(`New message from ${selectedUser.name}`);
+      }
+    });
+
+    // Listen for online/offline status
+    socketRef.current.on('user_online', (userId: string) => {
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, isOnline: true } : user
+        )
+      );
+    });
+
+    socketRef.current.on('user_offline', (userId: string) => {
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, isOnline: false } : user
+        )
+      );
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.emit('offline', session.user.id);
+        socketRef.current.disconnect();
+      }
+    };
+  }, [session]);
+
+  // Auto-scroll messages
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [user]);
+  }, [messages]);
 
-  const handleStartChat = (recipient: OnlineUser) => {
-    setSelectedUser(recipient);
-  };
+  // Fetch online users
+  useEffect(() => {
+    if (!isOpen || !session?.user) return;
 
-  const handleCloseChat = () => {
-    setSelectedUser(null);
-  };
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/users');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setUsers(data.users.map((user: User) => ({ ...user, isOnline: false })));
+        } else {
+          setError(data.message || 'Failed to fetch users');
+          toast.error('Could not load users');
+        }
+      } catch (err) {
+        setError('Failed to fetch users');
+        toast.error('Connection error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchUsers();
+  }, [isOpen, session]);
+
+  // Toggle chat list
   const toggleChatList = () => {
     setIsOpen(!isOpen);
   };
+
+  // Handle user selection
+  const handleUserSelect = async (selectedUser: OnlineUser) => {
+    setSelectedUser(selectedUser);
+    // Fetch chat history with selected user
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/messages?userId=${selectedUser.id}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setMessages(data.messages);
+      } else {
+        setError(data.message || 'Failed to fetch messages');
+        toast.error('Could not load messages');
+      }
+    } catch (err) {
+      setError('Failed to fetch messages');
+      toast.error('Connection error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Send message
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !newMessage.trim() || !session?.user) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientId: selectedUser.id,
+          content: newMessage.trim(),
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setMessages((prev) => [...prev, data.message]);
+        setNewMessage('');
+        // Emit new message event
+        socketRef.current?.emit('new_message', data.message);
+        toast.success('Message sent');
+      } else {
+        setError(data.message || 'Failed to send message');
+        toast.error('Could not send message');
+      }
+    } catch (err) {
+      setError('Failed to send message');
+      toast.error('Connection error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!session?.user) return null;
 
   return (
     <>
@@ -42,81 +175,134 @@ export default function ChatList() {
         className="fixed bottom-4 left-4 w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-all z-40 flex items-center justify-center"
         title="Open chat"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-        {onlineUsers.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-            {onlineUsers.length}
-          </span>
-        )}
+        <FiMessageCircle size={24} />
       </button>
 
-      {/* Chat User List */}
+      {/* Chat List Panel */}
       {isOpen && (
-        <div className="fixed bottom-20 left-4 w-80 bg-white rounded-lg shadow-2xl z-40 border border-gray-200">
+        <div className="fixed bottom-20 left-4 w-80 bg-white rounded-lg shadow-xl z-40">
           {/* Header */}
-          <div className="bg-primary-600 text-white px-4 py-3 rounded-t-lg flex items-center justify-between">
-            <h3 className="font-semibold">💬 Online Users</h3>
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="font-semibold text-gray-700">Messages</h3>
             <button
               onClick={toggleChatList}
-              className="text-white hover:text-gray-200 transition-colors"
-              aria-label="Close"
+              className="text-gray-500 hover:text-gray-700"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <FiX size={20} />
             </button>
           </div>
 
-          {/* Users List */}
-          <div className="max-h-96 overflow-y-auto">
-            {onlineUsers.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-gray-500 text-sm">No other users online</p>
+          {/* Users List or Chat View */}
+          <div className="h-96 overflow-y-auto">
+            {!selectedUser ? (
+              <div className="p-4">
+                {loading ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                  </div>
+                ) : error ? (
+                  <div className="text-center text-red-500 p-4">{error}</div>
+                ) : users.length === 0 ? (
+                  <div className="text-center text-gray-500">No users available</div>
+                ) : (
+                  <ul className="space-y-2">
+                    {users.map((user) => (
+                      <li key={user.id}>
+                        <button
+                          onClick={() => handleUserSelect(user)}
+                          className="w-full text-left p-2 hover:bg-gray-100 rounded-lg flex items-center space-x-2"
+                        >
+                          <div 
+                            className={`w-2 h-2 rounded-full ${
+                              user.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                            }`}
+                          />
+                          <span>{user.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {onlineUsers.map((onlineUser) => (
+              <div className="flex flex-col h-full">
+                {/* Chat Header */}
+                <div className="p-4 border-b flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className={`w-2 h-2 rounded-full ${
+                        selectedUser.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      }`}
+                    />
+                    <span className="font-medium">{selectedUser.name}</span>
+                  </div>
                   <button
-                    key={onlineUser.userId}
-                    onClick={() => {
-                      handleStartChat(onlineUser);
-                      setIsOpen(false);
-                    }}
-                    className="w-full px-4 py-3 hover:bg-gray-50 transition-colors text-left flex items-center gap-3"
+                    onClick={() => setSelectedUser(null)}
+                    className="text-gray-500 hover:text-gray-700"
                   >
-                    <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-semibold">
-                      {onlineUser.firstName[0]}{onlineUser.lastName[0]}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <p className="font-medium text-gray-900">
-                          {onlineUser.firstName} {onlineUser.lastName}
-                        </p>
-                      </div>
-                      <p className="text-xs text-gray-600">{onlineUser.role}</p>
-                    </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <FiX size={20} />
                   </button>
-                ))}
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {loading ? (
+                    <div className="flex justify-center p-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    </div>
+                  ) : error ? (
+                    <div className="text-center text-red-500 p-4">{error}</div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center text-gray-500">No messages yet</div>
+                  ) : (
+                    <>
+                      {messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex ${
+                            message.senderId === session.user.id ? 'justify-end' : 'justify-start'
+                          }`}
+                        >
+                          <div
+                            className={`max-w-[80%] p-3 rounded-lg ${
+                              message.senderId === session.user.id
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <form onSubmit={sendMessage} className="p-4 border-t">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                      disabled={loading}
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading || !newMessage.trim()}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
           </div>
         </div>
-      )}
-
-      {/* Chat Window */}
-      {selectedUser && (
-        <ChatWindow recipient={selectedUser} onClose={handleCloseChat} />
       )}
     </>
   );

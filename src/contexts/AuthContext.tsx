@@ -14,6 +14,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  getAccessToken: () => string | null;
 }
 
 interface RegisterData {
@@ -51,6 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login with:', { email });
+      console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+      
       const response = await api.post<AuthResponse>('/auth/login', {
         email,
         password,
@@ -121,8 +125,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const getAccessToken = () => {
+    return localStorage.getItem('accessToken');
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, getAccessToken }}>
       {children}
     </AuthContext.Provider>
   );

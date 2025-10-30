@@ -7,6 +7,7 @@ import { bookingService } from '@/services/api';
 import { Booking } from '@/types';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import ExportBookings from '@/components/admin/ExportBookings';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -97,10 +98,16 @@ export default function BookingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">📊 My Bookings</h1>
-              <p className="text-sm text-gray-600">View and manage your court reservations</p>
+              <h1 className="text-2xl font-bold text-gray-900">📊 {user.role === 'ADMIN' ? 'All Bookings' : 'My Bookings'}</h1>
+              <p className="text-sm text-gray-600">View and manage {user.role === 'ADMIN' ? 'all' : 'your'} court reservations</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
+              {user.role === 'ADMIN' && (
+                <ExportBookings
+                  onError={(message) => toast.error(message)}
+                  onSuccess={(message) => toast.success(message)}
+                />
+              )}
               <button
                 onClick={() => router.push('/booking')}
                 className="btn btn-primary"

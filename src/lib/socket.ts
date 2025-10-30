@@ -11,13 +11,23 @@ export interface OnlineUser {
 }
 
 export interface ChatMessage {
+  id?: string;
   fromUserId: string;
   toUserId: string;
   message: string;
   timestamp: string;
+  createdAt?: string;
+  isRead?: boolean;
+  status?: 'pending' | 'sent' | 'error';
+  sender?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
 }
 
-class SocketService {
+export class SocketService {
   private socket: Socket | null = null;
 
   connect(userId: string, userData: { firstName: string; lastName: string; role: string }): Socket {
@@ -28,11 +38,15 @@ class SocketService {
     this.socket = io(SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
+      query: { userId },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     this.socket.on('connect', () => {
       console.log('✅ Socket connected:', this.socket?.id);
-      // Register user as online
       this.socket?.emit('user:online', {
         userId,
         firstName: userData.firstName,
@@ -45,7 +59,31 @@ class SocketService {
       console.log('❌ Socket disconnected');
     });
 
+    // Handle online users updates
+    this.socket.on('users:online_list', (onlineUsers: OnlineUser[]) => {
+      console.log('Online users updated:', onlineUsers);
+    });
+
     return this.socket;
+  }
+
+  getOnlineUsers(): Promise<OnlineUser[]> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+
+      this.socket.emit('users:get_online');
+      this.socket.once('users:online_list', (users: OnlineUser[]) => {
+        resolve(users);
+      });
+
+      // Add timeout
+      setTimeout(() => {
+        reject(new Error('Get online users timeout'));
+      }, 5000);
+    });
   }
 
   disconnect(): void {
@@ -59,71 +97,44 @@ class SocketService {
     return this.socket;
   }
 
-  // Send a message to another user
-  sendMessage(toUserId: string, message: string, fromUserId: string): void {
-    if (this.socket) {
+  sendMessage(toUserId: string, message: string, fromUserId: string): Promise<ChatMessage> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+
+      const timeoutId = setTimeout(() => {
+        this.socket?.off('message:sent');
+        this.socket?.off('message:error');
+        reject(new Error('Message send timeout'));
+      }, 5000);
+
+      const handleMessageSent = (sentMessage: ChatMessage) => {
+        clearTimeout(timeoutId);
+        this.socket?.off('message:sent', handleMessageSent);
+        this.socket?.off('message:error', handleMessageError);
+        resolve(sentMessage);
+      };
+
+      const handleMessageError = (error: any) => {
+        clearTimeout(timeoutId);
+        this.socket?.off('message:sent', handleMessageSent);
+        this.socket?.off('message:error', handleMessageError);
+        reject(new Error(error.message || 'Failed to send message'));
+      };
+
+      this.socket.on('message:sent', handleMessageSent);
+      this.socket.on('message:error', handleMessageError);
+
       this.socket.emit('message:send', {
         fromUserId,
         toUserId,
         message,
         timestamp: new Date().toISOString(),
       });
-    }
-  }
-
-  // Listen for new messages
-  onMessage(callback: (message: ChatMessage) => void): void {
-    if (this.socket) {
-      this.socket.on('message:receive', callback);
-    }
-  }
-
-  // Listen for message sent confirmation
-  onMessageSent(callback: (message: ChatMessage) => void): void {
-    if (this.socket) {
-      this.socket.on('message:sent', callback);
-    }
-  }
-
-  // Listen for online users updates
-  onOnlineUsers(callback: (users: OnlineUser[]) => void): void {
-    if (this.socket) {
-      this.socket.on('users:online', callback);
-    }
-  }
-
-  // Listen for new notifications
-  onNotification(callback: (notification: any) => void): void {
-    if (this.socket) {
-      this.socket.on('notification:new', callback);
-    }
-  }
-
-  // Listen for booking events
-  onBookingCreated(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('booking:created', callback);
-    }
-  }
-
-  onBookingCancelled(callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on('booking:cancelled', callback);
-    }
-  }
-
-  // Remove listeners
-  removeListeners(): void {
-    if (this.socket) {
-      this.socket.off('message:receive');
-      this.socket.off('message:sent');
-      this.socket.off('users:online');
-      this.socket.off('notification:new');
-      this.socket.off('booking:created');
-      this.socket.off('booking:cancelled');
-    }
+    });
   }
 }
 
 export const socketService = new SocketService();
-

@@ -1,0 +1,25 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './animations.css';
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Message bubble animations */
+.message-bubble {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Better focus states */
+.focus-ring {
+  @apply ring-2 ring-blue-500 ring-opacity-50;
+}
+
+/* Input styles */
+.chat-input {
+  @apply transition-all duration-200 ease-in-out;
+  @apply focus:shadow-lg;
+}
