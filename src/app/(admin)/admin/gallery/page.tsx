@@ -96,8 +96,24 @@ export default function AdminGalleryPage() {
       setUploadData({ title: '', description: '' });
       fetchGalleryImages();
     } catch (error: any) {
-      console.error('Upload failed:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to add image';
+      console.error('Upload failed:', {
+        error,
+        response: error.response?.data,
+        message: error.message,
+        stack: error.stack
+      });
+      let errorMessage = 'Failed to add image';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message.includes('NetworkError')) {
+        errorMessage = 'Network error. Please check your connection.';
+      } else if (error.message.includes('auth')) {
+        errorMessage = 'Authentication failed. Please refresh the page.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
     }
   };
@@ -163,7 +179,7 @@ export default function AdminGalleryPage() {
               <label className="block text-sm font-medium text-gray-700">Image</label>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp"
                 onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-500
                   file:mr-4 file:py-2 file:px-4
@@ -172,6 +188,9 @@ export default function AdminGalleryPage() {
                   file:bg-primary-50 file:text-primary-700
                   hover:file:bg-primary-100"
               />
+              <p className="mt-1 text-sm text-gray-500">
+                Accepted formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Title</label>
@@ -213,10 +232,13 @@ export default function AdminGalleryPage() {
             >
               <div className="relative h-64">
                 <Image
-                  src={image.imageUrl}
+                  src={`${image.imageUrl}?tr=w-800,h-600`}
                   alt={image.title}
                   fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   style={{ objectFit: 'cover' }}
+                  priority={false}
+                  quality={75}
                 />
               </div>
               <div className="p-4">

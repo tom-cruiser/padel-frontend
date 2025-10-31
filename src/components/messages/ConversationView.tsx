@@ -37,29 +37,26 @@ export function ConversationView({ userId }: ConversationViewProps) {
           throw new Error('No authentication token found');
         }
 
-        console.log('Fetching messages and user details...');
-        const [fetchedMessages, userData] = await Promise.all([
-          fetchMessages(userId, token).catch((error: Error) => {
-            console.error('Failed to fetch messages:', error.message);
-            throw new Error(`Failed to fetch messages: ${error.message}`);
-          }),
-          getUserDetails(userId, token).catch((error: Error) => {
-            console.error('Failed to fetch user details:', error.message);
-            throw new Error(`Failed to fetch user details: ${error.message}`);
-          })
-        ]);
+        console.log('Fetching messages...');
+        const fetchedMessages = await fetchMessages(userId, token);
         
-        // Set the fetched messages and user data in state
+        // Extract user details from the first message's sender information
+        const otherUserDetails = fetchedMessages.find(msg => msg.fromUserId === userId)?.sender;
+        
+        // Set the fetched messages
         setMessages(fetchedMessages.map((msg: Message) => ({
           ...msg,
-          status: 'sent' as const,
-          isRead: msg.fromUserId === user?.id ? true : msg.read || false
+          status: 'sent' as const
         })));
-        setOtherUser(userData);
+        
+        // Set other user details if available
+        if (otherUserDetails) {
+          setOtherUser(otherUserDetails);
+        }
         
         console.log('Successfully fetched data:', {
           messagesCount: fetchedMessages?.length,
-          userData: userData?.id
+          userData: otherUserDetails?.id
         });
 
         setError(null);
@@ -105,7 +102,7 @@ export function ConversationView({ userId }: ConversationViewProps) {
               const newMessage: Message = {
                 ...message,
                 status: 'sent' as const,
-                read: message.fromUserId === userId ? false : true
+                isRead: message.fromUserId === userId ? false : true
               };
               if (message.fromUserId === userId) {
                 markAsRead();
@@ -157,9 +154,9 @@ export function ConversationView({ userId }: ConversationViewProps) {
         message: newMessage,
         fromUserId: user.id,
         toUserId: userId,
-        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         status: 'pending',
-        read: false,
+        isRead: false,
         sender: {
           id: user.id,
           firstName: user.firstName,
@@ -235,7 +232,9 @@ export function ConversationView({ userId }: ConversationViewProps) {
                   </span>
                 </div>
               )}
-              {otherUser.lastSeen && (new Date().getTime() - new Date(otherUser.lastSeen).getTime() < 300000) && (
+              {otherUser.lastSeen && otherUser.lastSeen instanceof Date && (
+                new Date().getTime() - new Date(otherUser.lastSeen).getTime() < 300000
+              ) && (
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
               )}
             </div>
@@ -246,7 +245,7 @@ export function ConversationView({ userId }: ConversationViewProps) {
               <p className="text-sm text-gray-500">
                 {isTyping ? (
                   <span className="text-blue-600">typing...</span>
-                ) : otherUser.lastSeen ? (
+                ) : otherUser.lastSeen && !isNaN(new Date(otherUser.lastSeen).getTime()) ? (
                   `last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`
                 ) : (
                   'Offline'
@@ -286,7 +285,9 @@ export function ConversationView({ userId }: ConversationViewProps) {
                   message.fromUserId === user?.id ? 'justify-end' : 'justify-start'
                 }`}>
                   <span>
-                    {formatDistanceToNow(new Date(message.createdAt || message.timestamp || Date.now()), { addSuffix: true })}
+                    {message.createdAt 
+                      ? formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })
+                      : 'Just now'}
                   </span>
                   {message.fromUserId === user?.id && (
                     <span className="ml-2">

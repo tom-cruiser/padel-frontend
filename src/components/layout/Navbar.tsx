@@ -51,17 +51,18 @@ export function Navbar() {
 
   // Public pages available to all users
   const publicPages = [
-    { title: 'Courts', href: '/courts' },
-    { title: 'Gallery', href: '/gallery' },
+    { title: 'Home', href: '/' },
+    { title: 'About', href: '/about' },
+    { title: 'Services', href: '/services' },
+    { title: 'Contact', href: '/contact' },
   ];
 
   // Pages that require authentication
   const authenticatedPages = [
-    { title: 'Bookings', href: '/bookings' },
+    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Messages', href: '/messages' },
     ...(user?.role === 'ADMIN' ? [
-      { title: 'Admin Dashboard', href: '/admin/bookings' },
-      { title: 'Manage Gallery', href: '/admin/gallery' }
+      { title: 'Admin', href: '/admin' },
     ] : []),
   ];
 

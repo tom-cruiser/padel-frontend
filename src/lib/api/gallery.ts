@@ -1,21 +1,11 @@
 import { api } from './api';
 
-interface GalleryImage {
-  id: string;
-  title: string;
-  description: string | null;
-  imageUrl: string;
-  isActive: boolean;
-  createdAt: string;
-  user: {
-    firstName: string;
-    lastName: string;
-  };
-}
+import { GalleryImage, GalleryImageResponse } from '@/types/gallery';
 
-export async function getGalleryImages(activeOnly = true): Promise<GalleryImage[]> {
+export async function getGalleryImages(activeOnly = true): Promise<GalleryImageResponse[]> {
   try {
     const response = await api.get(`/gallery${activeOnly ? '?isActive=true' : ''}`);
+    console.log('Gallery response:', response.data);
     return response.data.images;
   } catch (error) {
     console.error('Failed to fetch gallery images:', error);
@@ -47,31 +37,82 @@ export async function addGalleryImage(formData: FormData): Promise<GalleryImage>
       throw new Error('Only image files are allowed');
     }
 
-    console.log('Uploading image:', {
-      name: file.name,
-      type: file.type,
-      size: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+    console.log('Starting image upload process');
+
+    // Get ImageKit authentication parameters
+    console.log('Getting ImageKit auth parameters...');
+    const authResponse = await fetch('/api/imagekit/auth');
+    if (!authResponse.ok) {
+      throw new Error('Failed to get ImageKit authentication');
+    }
+    const authData = await authResponse.json();
+    console.log('Auth parameters received:', authData);
+    
+    if (!authData.token || !authData.signature || !authData.expire) {
+      throw new Error('Invalid ImageKit authentication parameters');
+    }
+
+    const { imagekit } = await import('@/lib/imagekit');
+    console.log('ImageKit client initialized');
+
+    const uploadParams = {
+      file: file,
+      fileName: `gallery-${Date.now()}-${file.name}`,
+      useUniqueFileName: true,
+      folder: '/gallery',
+      tags: ['gallery'],
+      token: authData.token,
+      signature: authData.signature,
+      expire: authData.expire
+    };
+    console.log('Preparing upload with params:', uploadParams);
+    
+    const uploadResponse = await imagekit.upload(uploadParams);
+
+    const imageKitData = {
+      url: uploadResponse.url,
+      fileId: uploadResponse.fileId
+    };
+    console.log('Upload successful:', imageKitData);
+
+    // 3. Save to our backend
+    const galleryData = new FormData();
+    galleryData.append('title', title);
+    galleryData.append('imageUrl', imageKitData.url);
+    galleryData.append('fileId', imageKitData.fileId);
+    if (formData.get('description')) {
+      galleryData.append('description', formData.get('description') as string);
+    }
+
+    // Log the FormData contents for debugging
+    console.log('FormData contents:', {
+      title: galleryData.get('title'),
+      imageUrl: galleryData.get('imageUrl'),
+      fileId: galleryData.get('fileId'),
+      description: galleryData.get('description')
     });
 
-    const config = {
-      headers: { 
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 30000, // 30 seconds timeout
-      onUploadProgress: (progressEvent: any) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        console.log(`Upload progress: ${percentCompleted}%`);
+    // Log the request details
+    console.log('Sending gallery data to backend:', {
+      endpoint: '/gallery',
+      formData: {
+        title: galleryData.get('title'),
+        imageUrl: galleryData.get('imageUrl'),
+        fileId: galleryData.get('fileId'),
+        description: galleryData.get('description')
       }
-    };
+    });
 
-    const response = await api.post('/gallery', formData, config);
-    
-    console.log('Server response:', response.data);
-    
+    const response = await api.post('/gallery', galleryData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    });
+
     if (!response.data.gallery) {
       throw new Error('Invalid response format from server');
     }
-    
+
     return response.data.gallery;
   } catch (error: any) {
     console.error('Gallery image upload failed:', {
@@ -96,7 +137,7 @@ export async function addGalleryImage(formData: FormData): Promise<GalleryImage>
   }
 }
 
-export async function updateGalleryImage(id: string, data: Partial<GalleryImage>): Promise<GalleryImage> {
+export async function updateGalleryImage(id: string, data: Partial<GalleryImageResponse>): Promise<GalleryImage> {
   try {
     const response = await api.patch(`/gallery/${id}`, data);
     return response.data.gallery;

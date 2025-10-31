@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { AuthProvider as NextAuthProvider } from '@/providers/AuthProvider';
 import { Toaster } from 'react-hot-toast';
 import FloatingChatButton from '@/components/FloatingChatButton';
 
@@ -23,7 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <NextAuthProvider>
           <AuthProvider>
             {children}
             <FloatingChatButton />
@@ -52,7 +50,6 @@ export default function RootLayout({
               }}
             />
           </AuthProvider>
-        </NextAuthProvider>
       </body>
     </html>
   );

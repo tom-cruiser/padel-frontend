@@ -6,6 +6,17 @@ interface ImageUploadProps {
   onError: (error: string) => void;
 }
 
+interface UploadProgressEvent {
+  loaded: number;
+  total: number;
+}
+
+interface ImageKitResponse {
+  url: string;
+  fileId: string;
+  name: string;
+}
+
 export function ImageUpload({ onUploadComplete, onError }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -17,24 +28,42 @@ export function ImageUpload({ onUploadComplete, onError }: ImageUploadProps) {
       setUploading(true);
       setProgress(0);
 
-      const response = await imagekit.upload({
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('title', caption || file.name); // Use caption as title or fallback to filename
+      formData.append('description', caption || ''); // Optional description
+
+      // Get ImageKit auth token
+      const authResponse = await fetch('/api/imagekit/auth');
+      const authData = await authResponse.json();
+
+      if (!authData.signature || !authData.expire || !authData.token) {
+        throw new Error('Failed to get upload authorization');
+      }
+
+      // Upload to ImageKit first
+      const ikResponse = await imagekit.upload({
         file,
         fileName: file.name,
         tags: ['gallery'],
         folder: '/gallery',
         useUniqueFileName: true,
-        customMetadata: {
-          caption: caption,
-        },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setProgress(percentCompleted);
-        },
+        signature: authData.signature,
+        token: authData.token,
+        expire: authData.expire,
+      }) as unknown as ImageKitResponse;
+
+      // Now save the image reference to our backend
+      formData.append('imageUrl', ikResponse.url);
+      formData.append('fileId', ikResponse.fileId);
+
+      await fetch('/api/gallery', {
+        method: 'POST',
+        body: formData,
       });
 
-      onUploadComplete(response.url);
+      onUploadComplete(ikResponse.url);
       setCaption('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

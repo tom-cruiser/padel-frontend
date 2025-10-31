@@ -22,9 +22,8 @@ export interface Message {
   message: string;
   fromUserId: string;
   toUserId: string;
-  timestamp: string;
-  createdAt?: string;
-  read: boolean;
+  createdAt: string;
+  isRead: boolean;
   status?: 'pending' | 'sent' | 'error';
   sender?: {
     id: string;
@@ -52,14 +51,10 @@ export async function fetchConversations(): Promise<Conversation[]> {
   }
 }
 
-export async function fetchMessages(userId: string, token: string): Promise<Message[]> {
+export async function fetchMessages(userId: string): Promise<Message[]> {
   try {
     console.log(`Fetching messages for user ${userId}...`);
-    const response = await api.get(`/messages/user/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const response = await api.get(`/messages/conversation/${userId}`);
     console.log('Messages response:', response.data);
     return response.data.messages;
   } catch (error) {
@@ -75,14 +70,14 @@ export async function fetchMessages(userId: string, token: string): Promise<Mess
 }
 
 export async function sendMessage(
-  conversationId: number,
-  content: string
+  toUserId: string,
+  message: string
 ): Promise<Message> {
   try {
-    console.log(`Sending message to conversation ${conversationId}...`);
-    const response = await api.post(`/messages/${conversationId}`, { content });
+    console.log(`Sending message to user ${toUserId}...`);
+    const response = await api.post('/messages', { toUserId, message });
     console.log('Send message response:', response.data);
-    return response.data.message;
+    return response.data.data;
   } catch (error) {
     const axiosError = error as AxiosError<{ error: string }>;
     console.error('Failed to send message:', {
@@ -90,5 +85,41 @@ export async function sendMessage(
       data: axiosError.response?.data
     });
     throw new Error(axiosError.response?.data?.error || 'Failed to send message');
+  }
+}
+
+export async function getUserDetails(userId: string, token: string): Promise<any> {
+  try {
+    console.log(`Fetching user details for user ${userId}...`);
+    const response = await api.get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log('User details response:', response.data);
+    return response.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<{ error: string }>;
+    console.error('Failed to fetch user details:', {
+      status: axiosError.response?.status,
+      data: axiosError.response?.data
+    });
+    throw new Error(
+      axiosError.response?.data?.error || 'Failed to fetch user details'
+    );
+  }
+}
+
+export async function markMessagesAsRead(userId: string): Promise<void> {
+  try {
+    console.log(`Marking messages as read for user ${userId}...`);
+    await api.patch(`/messages/read/${userId}`);
+    console.log('Messages marked as read');
+  } catch (error) {
+    const axiosError = error as AxiosError<{ error: string }>;
+    console.error('Failed to mark messages as read:', {
+      status: axiosError.response?.status,
+      data: axiosError.response?.data
+    });
   }
 }

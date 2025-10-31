@@ -6,16 +6,27 @@ export async function getAllUsers(): Promise<User[]> {
     console.log('Making request to fetch users...');
     const token = localStorage.getItem('accessToken');
     console.log('Using token:', token ? 'Present' : 'Missing');
+    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+    
+    // Debug request configuration
+    const config = {
+      url: '/api/users',
+      method: 'get',
+      headers: { Authorization: token ? `Bearer ${token}` : undefined }
+    };
+    console.log('Request config:', config);
     
     const response = await api.get('/api/users');
     console.log('API Response:', response.data);
     
-    if (!response.data.users || !Array.isArray(response.data.users)) {
+    // Handle both possible response formats
+    const users = response.data.users || response.data;
+    if (!Array.isArray(users)) {
       console.error('Invalid response format:', response.data);
       throw new Error('Invalid response format');
     }
     
-    return response.data.users;
+    return users;
   } catch (error: any) {
     console.error('Error fetching users:', {
       message: error.message,

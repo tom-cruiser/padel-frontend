@@ -2,51 +2,40 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import GalleryGrid from '@/components/Gallery/GalleryGrid';
+import GalleryUpload from '@/components/Gallery/GalleryUpload';
 import { getGalleryImages } from '@/lib/api/gallery';
-import Image from 'next/image';
+import { GalleryImage } from '@/types/gallery';
 import toast from 'react-hot-toast';
 
-interface GalleryImage {
-  id: string;
-  title: string;
-  description: string | null;
-  imageUrl: string;
-  createdAt: string;
-  user: {
-    firstName: string;
-    lastName: string;
-  };
-}
-
 export default function GalleryPage() {
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const router = useRouter();
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showInactive, setShowInactive] = useState(false);
 
-  useEffect(() => {
-    fetchGalleryImages();
-  }, []);
-
-  const fetchGalleryImages = async () => {
+  const fetchImages = async () => {
     try {
-      const data = await getGalleryImages(true);
-      setImages(data);
+      setIsLoading(true);
+      const responseImages = await getGalleryImages(!showInactive);
+      // Convert response images to match the GalleryImage type
+      const convertedImages: GalleryImage[] = responseImages.map(img => ({
+        ...img,
+        fileId: img.fileId || '',
+        isActive: img.isActive || false
+      }));
+      setImages(convertedImages);
     } catch (error) {
       toast.error('Failed to load gallery images');
+      console.error('Error loading gallery:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-2xl text-primary-600">Loading...</div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchImages();
+  }, [showInactive]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,48 +48,46 @@ export default function GalleryPage() {
               <p className="text-sm text-gray-600">View our facility and courts</p>
             </div>
             {user?.role === 'ADMIN' && (
-              <button
-                onClick={() => router.push('/admin/gallery')}
-                className="btn btn-primary"
-              >
-                Manage Gallery
-              </button>
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={showInactive}
+                  onChange={(e) => setShowInactive(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                <span className="ml-2 text-gray-700">Show hidden images</span>
+              </label>
             )}
           </div>
         </div>
       </header>
 
-      {/* Gallery Grid */}
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {images.length === 0 ? (
+        {user?.role === 'ADMIN' && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Upload New Image</h2>
+            <GalleryUpload onUploadSuccess={fetchImages} />
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : images.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No images available in the gallery.</p>
+            {user?.role === 'ADMIN' && (
+              <p className="mt-2 text-gray-500">Upload some images to get started</p>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {images.map((image) => (
-              <div key={image.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="relative h-64">
-                  <Image
-                    src={image.imageUrl}
-                    alt={image.title}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="transform transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{image.title}</h3>
-                  {image.description && (
-                    <p className="mt-1 text-gray-600">{image.description}</p>
-                  )}
-                  <p className="mt-2 text-sm text-gray-500">
-                    Added by {image.user.firstName} {image.user.lastName}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <GalleryGrid
+            images={images}
+            onImageDeleted={fetchImages}
+            onImageUpdated={fetchImages}
+          />
         )}
       </main>
     </div>

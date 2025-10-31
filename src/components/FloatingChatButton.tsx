@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { FiMessageCircle } from 'react-icons/fi';
 import ChatPopup from './ChatPopup';
 
 export default function FloatingChatButton() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!session?.user) return null;
+  if (!user) return null;
 
   return (
     <>

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { io, Socket } from 'socket.io-client';
 import { OnlineUser, User } from '@/types/user';
 import { FiUsers, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
 export default function OnlineUsers() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [users, setUsers] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -19,12 +19,12 @@ export default function OnlineUsers() {
   // Debug logging
   useEffect(() => {
     console.log('Socket URL:', process.env.NEXT_PUBLIC_SOCKET_URL);
-    console.log('Session:', session);
-  }, [session]);
+    console.log('User:', user);
+  }, [user]);
 
   // Initialize WebSocket connection
   useEffect(() => {
-    if (!session?.user) return;
+    if (!user) return;
 
     try {
       console.log('Initializing socket connection...');
@@ -47,10 +47,10 @@ export default function OnlineUsers() {
       toast.error('Could not initialize real-time service');
     }
 
-    if (socketRef.current && socketInitialized) {
+    if (socketRef.current && socketInitialized && user) {
       // Join user's room
-      socketRef.current.emit('join', session.user.id);
-      socketRef.current.emit('online', session.user.id);
+      socketRef.current.emit('join', user.id);
+      socketRef.current.emit('online', user.id);
 
       // Listen for online/offline status
       socketRef.current.on('user_online', (userId: string) => {
@@ -74,16 +74,16 @@ export default function OnlineUsers() {
     }
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.emit('offline', session.user.id);
+      if (socketRef.current && user) {
+        socketRef.current.emit('offline', user.id);
         socketRef.current.disconnect();
       }
     };
-  }, [session]);
+  }, [user]);
 
   // Fetch online users
   useEffect(() => {
-    if (!session?.user) return;
+    if (!user) return;
 
     const fetchUsers = async () => {
       try {
@@ -106,14 +106,14 @@ export default function OnlineUsers() {
     };
 
     fetchUsers();
-  }, [isOpen, session]);
+  }, [isOpen, user]);
 
   // Toggle online users list
   const toggleOnlineUsers = () => {
     setIsOpen(!isOpen);
   };
 
-  if (!session?.user) return null;
+  if (!user) return null;
 
   return (
     <>

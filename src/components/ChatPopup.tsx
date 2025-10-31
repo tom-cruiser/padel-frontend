@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { FiX, FiSend } from 'react-icons/fi';
 
 type User = {
@@ -20,7 +20,7 @@ type Message = {
 };
 
 export default function ChatPopup({ onClose }: { onClose: () => void }) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,7 +43,7 @@ export default function ChatPopup({ onClose }: { onClose: () => void }) {
     // This is a placeholder
     const message = {
       id: Math.random().toString(),
-      senderId: session?.user?.id || '',
+      senderId: user?.id || '',
       recipientId: selectedUser.id,
       content: newMessage,
       timestamp: new Date(),
@@ -103,14 +103,14 @@ export default function ChatPopup({ onClose }: { onClose: () => void }) {
               <div
                 key={message.id}
                 className={`flex ${
-                  message.senderId === session?.user?.id
+                  message.senderId === user?.id
                     ? 'justify-end'
                     : 'justify-start'
                 }`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
-                    message.senderId === session?.user?.id
+                    message.senderId === user?.id
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}
