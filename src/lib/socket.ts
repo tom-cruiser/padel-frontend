@@ -97,6 +97,20 @@ export class SocketService {
     return this.socket;
   }
 
+  onOnlineUsers(callback: (users: OnlineUser[]) => void): void {
+    if (!this.socket) return;
+    this.socket.on('users:online_list', callback);
+  }
+
+  offOnlineUsers(callback?: (users: OnlineUser[]) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('users:online_list', callback);
+    } else {
+      this.socket.off('users:online_list');
+    }
+  }
+
   sendMessage(toUserId: string, message: string, fromUserId: string): Promise<ChatMessage> {
     return new Promise((resolve, reject) => {
       if (!this.socket) {
