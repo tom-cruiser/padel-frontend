@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
+
+// This route proxies gallery requests to the backend API. The frontend
+// does not run Prisma directly in production builds here, and the
+// backend is the single source of truth for DB operations.
+
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL;
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const session = await auth(req as unknown as Request);
+    if (!session?.isAuthenticated) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -16,67 +21,40 @@ export async function POST(req: NextRequest) {
     const fileId = formData.get('fileId') as string;
 
     if (!imageUrl || !title || !fileId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const gallery = await db.gallery.create({
-      data: {
-        imageUrl,
-        title,
-        description: description || null,
-        fileId,
-        isActive: true,
-        userId: session.user.id,
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+  const payload = { imageUrl, title, description: description || null, fileId, userId: session.userId };
+
+    const res = await fetch(`${BACKEND}/api/gallery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      // include credentials if your backend requires cookies
+      // credentials: 'include',
     });
 
-    return NextResponse.json({ gallery });
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('Gallery upload error:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload image' },
-      { status: 500 }
-    );
+    console.error('Gallery upload proxy error:', error);
+    return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const isActive = searchParams.get('isActive') === 'true';
+    const isActive = searchParams.get('isActive');
 
-    const images = await db.gallery.findMany({
-      where: isActive ? { isActive: true } : {},
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const url = new URL(`${BACKEND}/api/gallery`);
+    if (typeof isActive === 'string') url.searchParams.set('isActive', isActive);
 
-    return NextResponse.json({ images });
+    const res = await fetch(url.toString());
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('Gallery fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch images' },
-      { status: 500 }
-    );
+    console.error('Gallery fetch proxy error:', error);
+    return NextResponse.json({ error: 'Failed to fetch images' }, { status: 500 });
   }
 }
