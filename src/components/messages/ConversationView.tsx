@@ -37,8 +37,8 @@ export function ConversationView({ userId }: ConversationViewProps) {
           throw new Error('No authentication token found');
         }
 
-        console.log('Fetching messages...');
-        const fetchedMessages = await fetchMessages(userId, token);
+  console.log('Fetching messages...');
+  const fetchedMessages = await fetchMessages(userId);
         
         // Extract user details from the first message's sender information
         const otherUserDetails = fetchedMessages.find(msg => msg.fromUserId === userId)?.sender;
@@ -69,13 +69,10 @@ export function ConversationView({ userId }: ConversationViewProps) {
     };
 
     const markAsRead = async () => {
-      const token = getAccessToken();
-      if (token) {
-        try {
-          await markMessagesAsRead(userId, token);
-        } catch (error) {
-          console.error('Failed to mark messages as read:', error);
-        }
+      try {
+        await markMessagesAsRead(userId);
+      } catch (error) {
+        console.error('Failed to mark messages as read:', error);
       }
     };
 

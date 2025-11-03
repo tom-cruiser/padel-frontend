@@ -9,21 +9,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all users except the current user
+    // Get all users except the current user (only add NOT filter when email exists)
+    const currentEmail = session.user.email ?? undefined;
+
+    const whereClause = currentEmail
+      ? { NOT: { email: currentEmail } }
+      : undefined;
+
     const users = await prisma.user.findMany({
-      where: {
-        NOT: {
-          email: session.user.email,
-        },
-      },
+      where: whereClause,
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
       },
       orderBy: {
-        name: 'asc',
+        firstName: 'asc',
       },
     });
 

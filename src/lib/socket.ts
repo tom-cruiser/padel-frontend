@@ -111,6 +111,47 @@ export class SocketService {
     }
   }
 
+  // Register a callback for incoming messages (delivered to this client)
+  onMessage(callback: (message: ChatMessage) => void): void {
+    if (!this.socket) return;
+    this.socket.on('message:receive', callback);
+  }
+
+  offMessage(callback?: (message: ChatMessage) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('message:receive', callback);
+    } else {
+      this.socket.off('message:receive');
+    }
+  }
+
+  // Register callback for message status updates sent back to sender
+  onMessageSent(callback: (message: ChatMessage) => void): void {
+    if (!this.socket) return;
+    this.socket.on('message:sent', callback);
+  }
+
+  offMessageSent(callback?: (message: ChatMessage) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('message:sent', callback);
+    } else {
+      this.socket.off('message:sent');
+    }
+  }
+
+  // Remove commonly-added listeners for cleanup (used by components on unmount)
+  removeListeners(): void {
+    if (!this.socket) return;
+    // Message events
+    this.socket.off('message:receive');
+    this.socket.off('message:sent');
+    this.socket.off('message:error');
+    // Online users
+    this.socket.off('users:online_list');
+  }
+
   sendMessage(toUserId: string, message: string, fromUserId: string): Promise<ChatMessage> {
     return new Promise((resolve, reject) => {
       if (!this.socket) {
