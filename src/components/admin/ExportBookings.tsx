@@ -22,49 +22,35 @@ const ExportBookings: React.FC<ExportBookingsProps> = ({ startDate, endDate, onE
   const exportToPDF = async () => {
     try {
       setIsLoading(true);
-      const bookings = await exportBookingHistory({
+      
+      // Log auth state
+      const token = localStorage.getItem('accessToken');
+      const user = localStorage.getItem('user');
+      console.log('Auth state before export:', {
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 10)}...` : 'none',
+        user: user ? JSON.parse(user) : null
+      });
+      
+      await exportBookingHistory({
         startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
         endDate: endDate instanceof Date ? endDate.toISOString() : endDate,
+        format: 'pdf'
       });
-
-      const doc = new jsPDF();
-
-      // Add title
-      doc.setFontSize(16);
-      doc.text('Booking History Report', 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 23);
-
-      if (startDate) {
-        const startDateStr = startDate instanceof Date ? startDate.toLocaleDateString() : new Date(startDate).toLocaleDateString();
-        doc.text(`From: ${startDateStr}`, 14, 30);
-      }
-      if (endDate) {
-        const endDateStr = endDate instanceof Date ? endDate.toLocaleDateString() : new Date(endDate).toLocaleDateString();
-        doc.text(`To: ${endDateStr}`, 14, 37);
-      }
-
-      // Create table
-      doc.autoTable({
-        startY: startDate || endDate ? 45 : 30,
-        head: [['Player', 'Court', 'Date', 'Time', 'Status']],
-        body: bookings.map((booking) => [
-          booking.playerName,
-          booking.courtName,
-          booking.date,
-          `${booking.startTime} - ${booking.endTime}`,
-          booking.status,
-        ]),
-        styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-      });
-
-      doc.save('booking-history.pdf');
       onSuccess?.('PDF exported successfully!');
-    } catch (error) {
+      console.log('PDF export completed successfully');
+    } catch (error: any) {
       console.error('Failed to export PDF:', error);
-      onError?.('Failed to export PDF. Please try again.');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to export PDF';
+      onError?.(errorMessage);
+      
+      // Log detailed error information
+      console.error('Export error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -73,30 +59,28 @@ const ExportBookings: React.FC<ExportBookingsProps> = ({ startDate, endDate, onE
   const exportToExcel = async () => {
     try {
       setIsLoading(true);
-      const bookings = await exportBookingHistory({
+      console.log('Starting Excel export with params:', {
         startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
         endDate: endDate instanceof Date ? endDate.toISOString() : endDate,
+        format: 'excel'
       });
-
-      const worksheet = XLSX.utils.json_to_sheet(
-        bookings.map((booking) => ({
-          'Player Name': booking.playerName,
-          'Court': booking.courtName,
-          'Date': booking.date,
-          'Start Time': booking.startTime,
-          'End Time': booking.endTime,
-          'Status': booking.status,
-          'Created At': booking.createdAt,
-        }))
-      );
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Bookings');
-      XLSX.writeFile(workbook, 'booking-history.xlsx');
+      
+      await exportBookingHistory({
+        startDate: startDate instanceof Date ? startDate.toISOString() : startDate,
+        endDate: endDate instanceof Date ? endDate.toISOString() : endDate,
+        format: 'excel'
+      });
       onSuccess?.('Excel file exported successfully!');
-    } catch (error) {
-      console.error('Failed to export Excel:', error);
-      onError?.('Failed to export Excel file. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to export Excel:', {
+        error,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to export Excel file';
+      onError?.(`Export failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

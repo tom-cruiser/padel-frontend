@@ -1,6 +1,6 @@
 'use client';
 
-import Header from '@/components/Header';
+import { Navbar } from '@/components/layout/Navbar';
 import Footer from '@/components/Footer';
 
 export default function PublicLayout({
@@ -10,7 +10,7 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <Header />
+      <Navbar />
       <main className="min-h-screen">
         {children}
       </main>

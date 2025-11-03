@@ -28,11 +28,10 @@ const TIME_SLOTS = [
 ];
 
 const COACHES: Coach[] = [
-  { id: "c1", name: "Carlos Rodriguez", specialty: "Advanced Technique" },
-  { id: "c2", name: "Maria Santos", specialty: "Beginner Friendly" },
-  { id: "c3", name: "João Silva", specialty: "Competition Training" },
-  { id: "c4", name: "Ana Martinez", specialty: "Strategy & Tactics" },
-  { id: "c5", name: "Pedro Fernandez", specialty: "Youth Development" },
+  { id: "c1", name: "Mutika" },
+  { id: "c2", name: "Seif" },
+  { id: "c3", name: "Abdullah" },
+  { id: "c4", name: "Malick" },
 ];
 
 export default function BookingPage() {
@@ -42,6 +41,9 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<number[]>([]);
+  const [courtAvailability, setCourtAvailability] = useState<
+    Record<string, number[]>
+  >({});
 
   // Form state
   const [selectedCourt, setSelectedCourt] = useState<string>("");
@@ -53,7 +55,8 @@ export default function BookingPage() {
   const [withCoach, setWithCoach] = useState<boolean>(false);
   const [selectedCoach, setSelectedCoach] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [recurrenceType, setRecurrenceType] = useState<string>("NONE");
+  // Bookings are one-time only in this UI
+  const recurrenceType = "NONE";
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -66,8 +69,9 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedCourt && selectedDate) {
-      fetchAvailability();
+    if (selectedDate && courts.length > 0) {
+      // fetch availability for all courts (we'll display two courts side-by-side)
+      fetchAllAvailability();
     }
   }, [selectedCourt, selectedDate]);
 
@@ -81,8 +85,37 @@ export default function BookingPage() {
       );
       const booked = bookings.map((b: any) => Number(b.startTime));
       setBookedSlots(booked);
+      setCourtAvailability((prev) => ({ ...prev, [selectedCourt]: booked }));
     } catch (error) {
-      console.error("Failed to fetch availability");
+      console.error("Failed to fetch availability for court", selectedCourt);
+    }
+  };
+
+  const fetchAllAvailability = async () => {
+    if (!selectedDate || courts.length === 0) return;
+
+    try {
+      const relevantCourts = courts.filter((c) =>
+        ["Blue Padel Court", "Green Padel Court"].includes(c.name)
+      );
+
+      const promises = relevantCourts.map((court) =>
+        bookingService
+          .getCourtAvailability(court.id, selectedDate)
+          .then((bookings: any[]) => bookings.map((b) => Number(b.startTime)))
+          .catch(() => [])
+      );
+
+      const results = await Promise.all(promises);
+
+      const availabilityMap: Record<string, number[]> = {};
+      relevantCourts.forEach((court, idx) => {
+        availabilityMap[court.id] = results[idx] || [];
+      });
+
+      setCourtAvailability((prev) => ({ ...prev, ...availabilityMap }));
+    } catch (error) {
+      console.error("Failed to fetch availability for courts", error);
     }
   };
 
@@ -256,36 +289,71 @@ export default function BookingPage() {
             {/* Time Slot Selection */}
             <div>
               <label className="label">Select Time Slot *</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {TIME_SLOTS.map((slot) => {
-                  const isBooked = bookedSlots.includes(slot.hour);
-                  const isSelected = selectedTime === slot.hour;
+              {/* Show time slots side-by-side for Blue and Green courts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(["Blue Padel Court", "Green Padel Court"] as string[]).map(
+                  (courtName) => {
+                    const court = courts.find((c) => c.name === courtName);
+                    if (!court)
+                      return (
+                        <div key={courtName} className="p-4 border rounded">
+                          No {courtName} configured
+                        </div>
+                      );
 
-                  return (
-                    <button
-                      key={slot.hour}
-                      type="button"
-                      onClick={() => !isBooked && setSelectedTime(slot.hour)}
-                      disabled={isBooked}
-                      className={`p-3 border-2 rounded-lg text-sm font-medium transition-all relative ${
-                        isBooked
-                          ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : isSelected
-                          ? "border-primary-500 bg-primary-500 text-white"
-                          : "border-gray-300 text-gray-700 hover:border-primary-300 hover:bg-primary-50"
-                      }`}
-                    >
-                      <div>{slot.label.split(" - ")[0]}</div>
-                      <div className="text-xs mt-1">
-                        {isBooked ? (
-                          <span className="text-red-500">🔴 Booked</span>
-                        ) : (
-                          <span className="text-green-500">🟢 Available</span>
-                        )}
+                    const booked = courtAvailability[court.id] || [];
+
+                    return (
+                      <div key={court.id} className="p-3 border rounded-lg">
+                        <h4 className="font-semibold mb-2">{court.name}</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {TIME_SLOTS.map((slot) => {
+                            const isBooked = booked.includes(slot.hour);
+                            const isSelected =
+                              selectedTime === slot.hour &&
+                              selectedCourt === court.id;
+
+                            return (
+                              <button
+                                key={`${court.id}-${slot.hour}`}
+                                type="button"
+                                onClick={() => {
+                                  if (!isBooked) {
+                                    setSelectedCourt(court.id);
+                                    setSelectedTime(slot.hour);
+                                  }
+                                }}
+                                disabled={isBooked}
+                                className={`p-2 border rounded text-sm text-left transition-all ${
+                                  isBooked
+                                    ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : isSelected
+                                    ? "border-primary-500 bg-primary-500 text-white"
+                                    : "border-gray-300 text-gray-700 hover:border-primary-300 hover:bg-primary-50"
+                                }`}
+                              >
+                                <div className="font-medium">
+                                  {slot.label.split(" - ")[0]}
+                                </div>
+                                <div className="text-xs mt-1">
+                                  {isBooked ? (
+                                    <span className="text-red-500">
+                                      🔴 Booked
+                                    </span>
+                                  ) : (
+                                    <span className="text-green-500">
+                                      🟢 Available
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </button>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
               <p className="text-sm text-gray-500 mt-2">
                 🟢 Available slots are shown in green, 🔴 booked slots in red
@@ -371,25 +439,7 @@ export default function BookingPage() {
               )}
             </div>
 
-            {/* Recurrence */}
-            <div>
-              <label className="label">Booking Type</label>
-              <select
-                value={recurrenceType}
-                onChange={(e) => setRecurrenceType(e.target.value)}
-                className="input"
-              >
-                <option value="NONE">One-time booking</option>
-                <option value="WEEKLY">Weekly (same day & time)</option>
-                <option value="MONTHLY">Monthly (same date & time)</option>
-              </select>
-              {recurrenceType !== "NONE" && (
-                <p className="text-sm text-gray-500 mt-1">
-                  ⚠️ Recurring bookings will be created for the next 4
-                  occurrences
-                </p>
-              )}
-            </div>
+            {/* Recurrence: one-time bookings only (weekly/monthly removed) */}
 
             {/* Additional Notes */}
             <div>

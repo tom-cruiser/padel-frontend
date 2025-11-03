@@ -3,6 +3,15 @@
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import dynamic from "next/dynamic";
+
+// Dynamically import the map component to avoid SSR issues
+const OfficeMap = dynamic(() => import("@/components/maps/OfficeMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] w-full bg-gray-100 animate-pulse rounded-lg"></div>
+  ),
+});
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -62,11 +71,11 @@ export default function Contact() {
     <div className="space-y-20 py-10">
       {/* Contact Header */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold mb-8">Contact Us</h1>
+        <h1 className="text-4xl font-bold mb-8">Rejoignez-Nous</h1>
         <div className="grid md:grid-cols-2 gap-12">
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-semibold mb-4">Location</h2>
+              <h2 className="text-2xl font-semibold mb-4">Adress</h2>
               <p className="text-lg text-gray-600">
                 Entente Sportive de Bujumbura
                 <br />
@@ -76,19 +85,17 @@ export default function Contact() {
               </p>
             </div>
             <div>
-              <h2 className="text-2xl font-semibold mb-4">Opening Hours</h2>
+              <h2 className="text-2xl font-semibold mb-4">Heure d'Ouverture</h2>
               <p className="text-lg text-gray-600">
-                Monday to Sunday
+                Du Lundi au Dimanche
                 <br />
                 5:00 AM to 10:00 PM
               </p>
             </div>
             <div>
-              <h2 className="text-2xl font-semibold mb-4">
-                Contact Information
-              </h2>
+              <h2 className="text-2xl font-semibold mb-4">Contact</h2>
               <p className="text-lg text-gray-600">
-                Email: jmsportcenter@gmail.com
+                Email: bujumburapadel@gmail.com
                 <br />
                 Tel/WhatsApp: +257 76 322 521
                 <br />
@@ -97,14 +104,14 @@ export default function Contact() {
             </div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
+            <h2 className="text-2xl font-semibold mb-6">Envoyer un Message</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Name
+                  Nom
                 </label>
                 <input
                   type="text"
@@ -197,7 +204,7 @@ export default function Contact() {
                     Sending...
                   </>
                 ) : (
-                  "Send Message"
+                  "Envoyer le Message"
                 )}
               </button>
             </form>
@@ -209,13 +216,8 @@ export default function Contact() {
       <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-12">Find Us</h2>
-          <div className="relative h-[400px] rounded-lg overflow-hidden">
-            <Image
-              src="/images/photo3.jpg"
-              alt="Location Map"
-              fill
-              className="object-cover"
-            />
+          <div className="rounded-lg overflow-hidden">
+            <OfficeMap />
           </div>
         </div>
       </section>

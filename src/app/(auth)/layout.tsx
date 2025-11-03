@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import React from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -17,12 +18,12 @@ export default function AuthLayout({
     try {
       await signOut({ redirect: false });
       // Clear any client-side data
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      router.push('/login');
+      localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      router.push("/login");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -55,10 +56,28 @@ export default function AuthLayout({
               </Link>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
-                  href="/dashboard"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+                  href="/messages"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
                 >
-                  Dashboard
+                  Messages
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  About
+                </Link>
+                <Link
+                  href="/services"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  Services
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
+                >
+                  Contact
                 </Link>
                 <Link
                   href="/bookings"
@@ -90,6 +109,6 @@ export default function AuthLayout({
       <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
       </main>
-    </div>
+      </div>
   );
 }

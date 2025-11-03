@@ -1,9 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { socketService } from '@/lib/socket';
 import { User, AuthResponse } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -40,11 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (storedUser && accessToken) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      socketService.connect(parsedUser.id, {
-        firstName: parsedUser.firstName,
-        lastName: parsedUser.lastName,
-        role: parsedUser.role,
-      });
     }
 
     setLoading(false);
@@ -67,12 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('refreshToken', refreshToken);
 
       setUser(user);
-      socketService.connect(user.id, {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      });
-
       toast.success('Login successful!');
       router.push('/dashboard');
     } catch (error: any) {
@@ -93,12 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('refreshToken', refreshToken);
 
       setUser(user);
-      socketService.connect(user.id, {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      });
-
       toast.success('Registration successful!');
       router.push('/dashboard');
     } catch (error: any) {
@@ -114,8 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('refreshToken');
 
     setUser(null);
-    socketService.disconnect();
-
     toast.success('Logged out successfully');
     router.push('/login');
   };
@@ -125,12 +105,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  const getAccessToken = () => {
+  const getAccessToken = useCallback(() => {
     return localStorage.getItem('accessToken');
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    updateUser,
+    getAccessToken,
+  }), [user, loading, login, register, logout, updateUser, getAccessToken]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, getAccessToken }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

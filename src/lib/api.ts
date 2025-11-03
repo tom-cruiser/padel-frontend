@@ -3,12 +3,27 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const API_URL = `${BASE_URL}/api`;  // All routes are under /api in the backend
 
+console.log('API Configuration:', {
+  BASE_URL,
+  API_URL,
+  NODE_ENV: process.env.NODE_ENV
+});
+
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for cookies
+  withCredentials: true, // Important for cookies,
+  transformRequest: [function (data, headers) {
+    // Don't transform FormData requests
+    if (data instanceof FormData) {
+      delete headers['Content-Type'];
+      return data;
+    }
+    // Transform JSON data as usual
+    return JSON.stringify(data);
+  }]
 });
 
 // Request interceptor to add auth token

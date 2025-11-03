@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { socketService } from '@/lib/socket';
+import { useSocket } from '@/contexts/SocketContext';
 
 interface OnlineUser {
   id: string;
@@ -11,15 +11,15 @@ interface OnlineUser {
   avatar?: string;
 }
 
-export function OnlineUsersButton() {
+export default function OnlineUsersButton() {
+  console.log('OnlineUsersButton rendering');
   const [showModal, setShowModal] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const { user } = useAuth();
+  const { socket } = useSocket();
 
   useEffect(() => {
     if (!user) return;
-
-    const socket = socketService.getSocket();
     if (!socket) return;
 
     // Listen for online users updates
@@ -35,13 +35,13 @@ export function OnlineUsersButton() {
     return () => {
       socket.off('users:online');
     };
-  }, [user]);
+  }, [user, socket]);
 
   return (
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center"
+        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center z-[100]"
         title="Show Online Users"
       >
         <div className="relative">

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
@@ -23,16 +23,25 @@ export default function Home() {
             playsInline
             className="w-full h-full object-cover opacity-70"
           >
-            <source src="/videos/padel-hero.mp4" type="video/mp4" />
+            <source src="/videos/padel-tennis-match.mov" type="video/mp4" />
           </video>
         </div>
         <div className="relative z-10 h-full flex items-center">
-          <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div
+            className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-1000 ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+          >
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Experience the Future<br />of Racket Sports
+              Experience the Future
+              <br />
+              of Racket Sports
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-2xl">
-              Join the fastest growing sport in the world at Burundi's premier Padel facility
+              Join the fastest growing sport in the world at Burundi's premier
+              Padel facility
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
@@ -58,19 +67,27 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-green-500">24/7</div>
+              <div className="text-4xl md:text-5xl font-bold text-green-500">
+                24/7
+              </div>
               <div className="text-gray-400">Access</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-green-500">4+</div>
+              <div className="text-4xl md:text-5xl font-bold text-green-500">
+                4+
+              </div>
               <div className="text-gray-400">Pro Courts</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-green-500">1st</div>
+              <div className="text-4xl md:text-5xl font-bold text-green-500">
+                1st
+              </div>
               <div className="text-gray-400">In East Africa</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl md:text-5xl font-bold text-green-500">500+</div>
+              <div className="text-4xl md:text-5xl font-bold text-green-500">
+                500+
+              </div>
               <div className="text-gray-400">Active Players</div>
             </div>
           </div>
@@ -80,24 +97,28 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">Why Choose Padel?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
+            Why Choose Padel?
+          </h2>
           <div className="grid md:grid-cols-3 gap-12">
             {[
               {
                 title: "Easy to Learn",
-                description: "Perfect for beginners, learn the basics in just one session",
-                icon: "🎯"
+                description:
+                  "Perfect for beginners, learn the basics in just one session",
+                icon: "🎯",
               },
               {
                 title: "Social Sport",
-                description: "Always played in doubles, making it the ultimate social game",
-                icon: "🤝"
+                description:
+                  "Always played in doubles, making it the ultimate social game",
+                icon: "🤝",
               },
               {
                 title: "All Ages Welcome",
                 description: "Suitable for everyone from kids to seniors",
-                icon: "👨‍👩‍👧‍👦"
-              }
+                icon: "👨‍👩‍👧‍👦",
+              },
             ].map((feature, index) => (
               <div
                 key={index}
@@ -117,21 +138,34 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold mb-6">State-of-the-Art Facilities</h2>
+              <h2 className="text-4xl font-bold mb-6">
+                State-of-the-Art Facilities
+              </h2>
               <p className="text-gray-300 text-lg mb-8">
-                Our courts feature the latest technology and premium materials for the ultimate playing experience.
-                Book your court instantly through our online system.
+                Our courts feature the latest technology and premium materials
+                for the ultimate playing experience. Book your court instantly
+                through our online system.
               </p>
               <div className="space-y-4">
                 {[
                   "Professional-grade artificial turf",
                   "LED lighting for night games",
                   "Digital scoring system",
-                  "Instant online booking"
+                  "Instant online booking",
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center">
-                    <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-6 h-6 text-green-500 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span>{feature}</span>
                   </div>
@@ -162,9 +196,13 @@ export default function Home() {
       {/* Direct Messaging Section */}
       <section className="py-20 bg-primary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center mb-6">Stay Connected with Players</h2>
+          <h2 className="text-4xl font-bold text-center mb-6">
+            Stay Connected with Players
+          </h2>
           <p className="text-xl text-gray-600 text-center mb-16 max-w-2xl mx-auto">
-            Connect with other players instantly through our real-time messaging system. Send messages anytime - they'll receive them when they're online!
+            Connect with other players instantly through our real-time messaging
+            system. Send messages anytime - they'll receive them when they're
+            online!
           </p>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -179,7 +217,9 @@ export default function Home() {
                   </div>
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-                <p className="text-gray-600">Would you like to play doubles tomorrow at 6 PM?</p>
+                <p className="text-gray-600">
+                  Would you like to play doubles tomorrow at 6 PM?
+                </p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center gap-3 mb-4">
@@ -192,7 +232,9 @@ export default function Home() {
                   </div>
                   <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                 </div>
-                <p className="text-gray-600">Your lesson has been confirmed for next week!</p>
+                <p className="text-gray-600">
+                  Your lesson has been confirmed for next week!
+                </p>
               </div>
             </div>
             <div className="space-y-6">
@@ -201,34 +243,55 @@ export default function Home() {
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 text-primary-600">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div>
                     <p className="font-medium">Real-time Chat</p>
-                    <p className="text-gray-600">Instant messaging with online players</p>
+                    <p className="text-gray-600">
+                      Instant messaging with online players
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 text-primary-600">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div>
                     <p className="font-medium">Offline Messages</p>
-                    <p className="text-gray-600">Messages are saved and delivered when players come online</p>
+                    <p className="text-gray-600">
+                      Messages are saved and delivered when players come online
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 text-primary-600">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                   <div>
                     <p className="font-medium">Easy to Use</p>
-                    <p className="text-gray-600">Simple interface for quick communication</p>
+                    <p className="text-gray-600">
+                      Simple interface for quick communication
+                    </p>
                   </div>
                 </div>
               </div>
@@ -240,24 +303,26 @@ export default function Home() {
       {/* Testimonials Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center mb-16">What Players Say</h2>
+          <h2 className="text-4xl font-bold text-center mb-16">
+            What Players Say
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 text: "The facilities are world-class and the community is amazing. I'm addicted!",
                 name: "Sarah M.",
-                role: "Regular Player"
+                role: "Regular Player",
               },
               {
                 text: "As a beginner, I found it incredibly easy to learn and the coaches are excellent.",
                 name: "John D.",
-                role: "New Player"
+                role: "New Player",
               },
               {
                 text: "Best sports facility in Bujumbura. The online booking system is very convenient.",
                 name: "Marie K.",
-                role: "Club Member"
-              }
+                role: "Club Member",
+              },
             ].map((testimonial, index) => (
               <div key={index} className="bg-gray-50 p-8 rounded-xl">
                 <div className="text-gray-600 mb-6">{testimonial.text}</div>
@@ -280,9 +345,12 @@ export default function Home() {
           />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8">Ready to Join the Revolution?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-8">
+            Ready to Join the Revolution?
+          </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Experience the excitement of Padel at Burundi's premier sports facility
+            Experience the excitement of Padel at Burundi's premier sports
+            facility
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
