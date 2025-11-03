@@ -63,7 +63,7 @@ export default function NotificationsPage() {
             <div
               key={notification.id}
               className={`p-4 rounded-lg border ${
-                notification.read ? 'bg-white' : 'bg-blue-50'
+                notification.isRead ? 'bg-white' : 'bg-blue-50'
               }`}
             >
               <div className="flex justify-between items-start">
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
                 </div>
-                {!notification.read && (
+                {!notification.isRead && (
                   <button
                     onClick={() => markAsRead(notification.id)}
                     className="px-3 py-1 text-sm bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
