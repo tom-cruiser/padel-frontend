@@ -9,7 +9,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Welcome back, {user?.name}</h1>
+  <h1 className="text-2xl font-semibold text-gray-900">Welcome back, {user ? `${user.firstName} ${user.lastName}` : ''}</h1>
         <div className="mt-4 sm:mt-0">
           <Link
             href="/booking"
