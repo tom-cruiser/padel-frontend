@@ -1,58 +1,34 @@
 import { NextResponse } from 'next/server';
-import { getAuthUser } from '@/lib/auth';
-import prisma from '@/lib/db';
+
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
+
+async function forward(request: Request, backendPath: string) {
+  const url = new URL((request as any).url);
+  const search = url.search || '';
+  const headers: Record<string, string> = {};
+  const cookie = (request as any).headers?.get?.('cookie');
+  if (cookie) headers['cookie'] = cookie;
+  const auth = (request as any).headers?.get?.('authorization');
+  if (auth) headers['authorization'] = auth;
+  const contentType = (request as any).headers?.get?.('content-type');
+  if (contentType) headers['content-type'] = contentType;
+
+  const init: any = { method: (request as any).method || 'GET', headers };
+  if (init.method !== 'GET' && init.method !== 'HEAD') {
+    init.body = await (request as any).text();
+  }
+
+  const res = await fetch(`${BACKEND}${backendPath}${search}`, init);
+  const text = await res.text();
+  const contentTypeRes = res.headers.get('content-type') || '';
+  try {
+    const json = JSON.parse(text);
+    return NextResponse.json(json, { status: res.status });
+  } catch {
+    return new NextResponse(text, { status: res.status, headers: { 'content-type': contentTypeRes } });
+  }
+}
 
 export async function GET(request: Request) {
-  try {
-    const user = await getAuthUser(request);
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-
-    const whereClause: any = {};
-    if (startDate || endDate) {
-      whereClause.date = {};
-      if (startDate) {
-        whereClause.date.gte = new Date(startDate);
-      }
-      if (endDate) {
-        whereClause.date.lte = new Date(endDate);
-      }
-    }
-
-    const bookings = await prisma.booking.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        court: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return NextResponse.json({ bookings });
-  } catch (error) {
-    console.error('Admin bookings error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch bookings' },
-      { status: 500 }
-    );
-  }
+  return forward(request, '/api/admin/bookings');
 }

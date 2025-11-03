@@ -1,38 +1,38 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getAuthUser } from '@/lib/auth';
+
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
+
+async function forward(request: Request, backendPath: string) {
+  const url = new URL((request as any).url);
+  const search = url.search || '';
+  const headers: Record<string, string> = {};
+  const cookie = (request as any).headers?.get?.('cookie');
+  if (cookie) headers['cookie'] = cookie;
+  const auth = (request as any).headers?.get?.('authorization');
+  if (auth) headers['authorization'] = auth;
+  const contentType = (request as any).headers?.get?.('content-type');
+  if (contentType) headers['content-type'] = contentType;
+
+  const init: any = { method: (request as any).method || 'GET', headers };
+  if (init.method !== 'GET' && init.method !== 'HEAD') {
+    init.body = await (request as any).text();
+  }
+
+  const res = await fetch(`${BACKEND}${backendPath}${search}`, init);
+  const text = await res.text();
+  const contentTypeRes = res.headers.get('content-type') || '';
+  try {
+    const json = JSON.parse(text);
+    return NextResponse.json(json, { status: res.status });
+  } catch {
+    return new NextResponse(text, { status: res.status, headers: { 'content-type': contentTypeRes } });
+  }
+}
 
 export async function GET(
   request: Request,
   { params }: { params: { userId: string } }
 ) {
-  try {
-    const currentUser = await getAuthUser(request);
-    if (!currentUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: params.userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        lastSeen: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ user });
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  const backendPath = `/api/users/${params.userId}`;
+  return forward(request, backendPath);
 }

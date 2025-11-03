@@ -1,120 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
+
+async function forward(request: Request, backendPath: string) {
+  const url = new URL((request as any).url);
+  const search = url.search || '';
+  const headers: Record<string, string> = {};
+  const cookie = (request as any).headers?.get?.('cookie');
+  if (cookie) headers['cookie'] = cookie;
+  const auth = (request as any).headers?.get?.('authorization');
+  if (auth) headers['authorization'] = auth;
+  const contentType = (request as any).headers?.get?.('content-type');
+  if (contentType) headers['content-type'] = contentType;
+
+  const init: any = { method: (request as any).method || 'GET', headers };
+  if (init.method !== 'GET' && init.method !== 'HEAD') {
+    init.body = await (request as any).text();
+  }
+
+  const res = await fetch(`${BACKEND}${backendPath}${search}`, init);
+  const text = await res.text();
+  const contentTypeRes = res.headers.get('content-type') || '';
   try {
-    const session = await getServerSession();
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const url = new URL(req.url);
-    const userId = url.searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { message: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Get messages between current user and selected user
-    const messages = await prisma.message.findMany({
-      where: {
-        OR: [
-          {
-            fromUserId: session.user.id,
-            toUserId: userId,
-          },
-          {
-            fromUserId: userId,
-            toUserId: session.user.id,
-          },
-        ],
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-      select: {
-        id: true,
-        message: true,
-        fromUserId: true,
-        toUserId: true,
-        createdAt: true,
-        isRead: true,
-      },
-    });
-
-    // Mark received messages as read
-    await prisma.message.updateMany({
-      where: {
-        fromUserId: userId,
-        toUserId: session.user.id,
-        isRead: false,
-      },
-      data: {
-        isRead: true,
-      },
-    });
-
-    return NextResponse.json({ messages });
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
+    const json = JSON.parse(text);
+    return NextResponse.json(json, { status: res.status });
+  } catch {
+    return new NextResponse(text, { status: res.status, headers: { 'content-type': contentTypeRes } });
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession();
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(request: Request) {
+  const url = new URL((request as any).url);
+  const userId = url.searchParams.get('userId');
+  const backendPath = '/api/messages' + (userId ? `?userId=${encodeURIComponent(userId)}` : '');
+  return forward(request, backendPath);
+}
 
-    const { toUserId, message } = await req.json();
-
-    if (!toUserId || !message) {
-      return NextResponse.json(
-        { message: 'Recipient ID and message content are required' },
-        { status: 400 }
-      );
-    }
-
-    if (message.length > 500) {
-      return NextResponse.json(
-        { message: 'Message must be 500 characters or less' },
-        { status: 400 }
-      );
-    }
-
-    // Create new message
-    const newMessage = await prisma.message.create({
-      data: {
-        fromUserId: session.user.id,
-        toUserId,
-        message,
-        isRead: false,
-      },
-      select: {
-        id: true,
-        message: true,
-        fromUserId: true,
-        toUserId: true,
-        createdAt: true,
-        isRead: true,
-      },
-    });
-
-    return NextResponse.json({ message }, { status: 201 });
-  } catch (error) {
-    console.error('Error sending message:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+export async function POST(request: Request) {
+  return forward(request, '/api/messages');
 }
