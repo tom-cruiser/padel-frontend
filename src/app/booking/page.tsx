@@ -28,10 +28,10 @@ const TIME_SLOTS = [
 ];
 
 const COACHES: Coach[] = [
-  { id: "c1", name: "Mutika" },
-  { id: "c2", name: "Seif" },
-  { id: "c3", name: "Abdullah" },
-  { id: "c4", name: "Malick" },
+  { id: "c1", name: "Mutika", specialty: "Technique" },
+  { id: "c2", name: "Seif", specialty: "Footwork" },
+  { id: "c3", name: "Abdullah", specialty: "Tactics" },
+  { id: "c4", name: "Malick", specialty: "Fitness" },
 ];
 
 export default function BookingPage() {
