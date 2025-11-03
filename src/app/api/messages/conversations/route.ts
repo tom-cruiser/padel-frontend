@@ -25,8 +25,8 @@ export async function GET(request: Request) {
 
     const userIds = [
       ...new Set([
-        ...sentMessages.map((m) => m.toUserId),
-        ...receivedMessages.map((m) => m.fromUserId),
+        ...sentMessages.map((m: { toUserId: string }) => m.toUserId),
+        ...receivedMessages.map((m: { fromUserId: string }) => m.fromUserId),
       ]),
     ];
 
