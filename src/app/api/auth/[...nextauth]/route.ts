@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 
-export const authOptions = {
+const authOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt' as const,
