@@ -1,23 +1,30 @@
 import { NextResponse } from 'next/server';
 import ImageKit from 'imagekit';
 
-const imagekit = new ImageKit({
-  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || '',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
-  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || '',
-});
-
 export async function GET() {
   try {
-    if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || 
-        !process.env.IMAGEKIT_PRIVATE_KEY || 
-        !process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT) {
-      console.error('Missing required ImageKit environment variables');
+    // Support both IMAGEKIT_PRIVATE_KEY (server env) and NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY (if mistakenly set)
+    const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY || process.env.NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY;
+    const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
+    if (!publicKey || !privateKey || !urlEndpoint) {
+      console.error('Missing required ImageKit environment variables', {
+        publicKey: !!publicKey,
+        privateKey: !!privateKey,
+        urlEndpoint: !!urlEndpoint,
+      });
       return NextResponse.json(
         { error: 'ImageKit configuration is incomplete' },
         { status: 500 }
       );
     }
+
+    const imagekit = new ImageKit({
+      publicKey: publicKey,
+      privateKey: privateKey,
+      urlEndpoint: urlEndpoint,
+    });
 
     const authenticationParameters = imagekit.getAuthenticationParameters();
     console.log('Generated auth parameters:', {
