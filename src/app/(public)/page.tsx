@@ -21,9 +21,12 @@ export default function Home() {
             loop
             muted
             playsInline
-              className="w-full h-full object-cover opacity-70 pointer-events-none"
+            className="w-full h-full object-cover opacity-70 pointer-events-none"
           >
-            <source src="/videos/padel-tennis-match.mov" type="video/mp4" />
+            <source
+              src="/videos/padel-tennis-match.mov"
+              type="video/quicktime"
+            />
           </video>
         </div>
         <div className="relative z-10 h-full flex items-center">
@@ -59,7 +62,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
       </section>
 
       {/* Stats Section */}
@@ -173,7 +176,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-              <div className="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
+            <div className="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/court-preview.jpg"
                 alt="Court de Padel"

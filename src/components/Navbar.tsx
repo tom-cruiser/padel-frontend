@@ -26,7 +26,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <span className="text-white text-xl font-bold">
-              Club de Padel de Bujumbura{" "}
+              Padel Club de Bujumbura{" "}
             </span>
           </Link>
 
