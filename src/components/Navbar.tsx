@@ -25,7 +25,9 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-white text-xl font-bold">PADEL</span>
+            <span className="text-white text-xl font-bold">
+              Club de Padel de Bujumbura{" "}
+            </span>
           </Link>
 
           {/* Navigation Links */}

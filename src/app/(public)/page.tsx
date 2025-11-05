@@ -21,7 +21,7 @@ export default function Home() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover opacity-70"
+              className="w-full h-full object-cover opacity-70 pointer-events-none"
           >
             <source src="/videos/padel-tennis-match.mov" type="video/mp4" />
           </video>
@@ -59,7 +59,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10"></div>
+  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
       </section>
 
       {/* Stats Section */}
@@ -173,18 +173,18 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
+              <div className="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/court-preview.jpg"
                 alt="Court de Padel"
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
+                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors pointer-events-auto"
                 >
                   Vérifier la Disponibilité des Courts
                 </Link>
