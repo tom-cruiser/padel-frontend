@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 
+// Proxied routes read request headers/cookies and must be executed
+// dynamically at request time to forward authentication information.
+export const dynamic = 'force-dynamic';
+
 // This route proxies gallery requests to the backend API. The frontend
 // does not run Prisma directly in production builds here, and the
 // backend is the single source of truth for DB operations.

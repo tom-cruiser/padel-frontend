@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// This proxy may need runtime headers and should be executed dynamically.
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

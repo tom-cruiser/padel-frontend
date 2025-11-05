@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+
+// This route uses request headers / session and therefore must be evaluated
+// dynamically at request time. Prevent Next from attempting static rendering.
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {

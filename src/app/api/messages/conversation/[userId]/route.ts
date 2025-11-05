@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Forwards headers and authentication cookies to the backend — force dynamic.
+export const dynamic = 'force-dynamic';
+
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
 
 async function forward(request: Request, backendPath: string) {

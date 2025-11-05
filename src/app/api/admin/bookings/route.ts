@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Admin proxy route needs request headers; do not allow static rendering.
+export const dynamic = 'force-dynamic';
+
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
 
 async function forward(request: Request, backendPath: string) {
