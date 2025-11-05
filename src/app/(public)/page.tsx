@@ -21,7 +21,7 @@ export default function Accueil() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover opacity-70 pointer-events-none"
+            className="w-full h-full object-cover opacity-70"
           >
             <source src="/videos/padel-tennis-match.mp4" type="video/mp4" />
             Votre navigateur ne supporte pas la balise vidéo.
@@ -46,13 +46,13 @@ export default function Accueil() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="/connexion"
+                href="/login"
                 className="inline-flex items-center justify-center px-8 py-4 border-2 border-white bg-white text-gray-900 text-lg font-semibold rounded-full hover:bg-transparent hover:text-white transition-colors duration-300"
               >
                 Réserver un court
               </Link>
               <Link
-                href="/a-propos"
+                href="/about"
                 className="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-full hover:bg-white hover:text-gray-900 transition-colors duration-300"
               >
                 En savoir plus
@@ -60,7 +60,7 @@ export default function Accueil() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10"></div>
       </section>
 
       {/* Section Statistiques */}
@@ -195,11 +195,11 @@ export default function Accueil() {
                   <p>Image du court de Padel</p>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <Link
-                  href="/connexion"
-                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors pointer-events-auto"
+                  href="/login"
+                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
                 >
                   Vérifier la Disponibilité des Courts
                 </Link>
@@ -367,7 +367,7 @@ export default function Accueil() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/connexion"
+              href="/login"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-green-600 text-lg font-semibold rounded-full hover:bg-gray-100 transition-colors"
             >
               Réservez Maintenant
