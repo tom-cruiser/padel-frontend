@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
@@ -70,31 +70,27 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+              Don't have an account?{" "}
+              <Link
+                href="/register"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
                 Register here
               </Link>
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium">
+              <Link
+                href="/"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
                 Back to Home
               </Link>
-            </p>
-          </div>
-
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs text-gray-600 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-gray-700">
-              <strong>Admin:</strong> admin@padelcourt.com / admin123
-            </p>
-            <p className="text-xs text-gray-700">
-              <strong>Player:</strong> player@padelcourt.com / player123
             </p>
           </div>
         </div>
