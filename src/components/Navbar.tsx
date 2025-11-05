@@ -34,7 +34,7 @@ export default function BarreNavigation() {
           {/* Liens de Navigation - Desktop */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href="/a-propos"
+              href="/about"
               className="text-gray-300 hover:text-white transition-colors"
             >
               À Propos
@@ -52,7 +52,7 @@ export default function BarreNavigation() {
               Contact
             </Link>
             <Link
-              href="/connexion"
+              href="/login"
               className="inline-flex items-center justify-center px-4 py-2 border border-white text-white font-medium rounded-full hover:bg-white hover:text-black transition-colors"
             >
               Connexion
@@ -107,7 +107,7 @@ export default function BarreNavigation() {
           <div className="md:hidden pb-4">
             <div className="flex flex-col space-y-4">
               <Link
-                href="/a-propos"
+                href="/about"
                 onClick={() => setMenuOuvert(false)}
                 className="text-gray-300 hover:text-white transition-colors px-2 py-2"
               >
@@ -128,7 +128,7 @@ export default function BarreNavigation() {
                 Contact
               </Link>
               <Link
-                href="/connexion"
+                href="/login"
                 onClick={() => setMenuOuvert(false)}
                 className="inline-flex items-center justify-center px-4 py-2 border border-white text-white font-medium rounded-full hover:bg-white hover:text-black transition-colors"
               >
