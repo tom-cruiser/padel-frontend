@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-import Navbar from "@/components/Navbar";
-
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -15,7 +13,6 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
-      <Navbar />
       {/* Hero Section with Video Background */}
       <section className="relative h-screen bg-black">
         <div className="absolute inset-0 z-0">
@@ -38,26 +35,26 @@ export default function Home() {
             }`}
           >
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Experience the Future
+              Découvrez l'avenir
               <br />
-              of Racket Sports
+              des sports de raquette
             </h1>
             <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-2xl">
-              Join the fastest growing sport in the world at Burundi's premier
-              Padel facility
+              Rejoignez le sport qui connaît la croissance la plus rapide au
+              monde dans la première installation de Padel au Burundi
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center px-8 py-4 border-2 border-white bg-white text-gray-900 text-lg font-semibold rounded-full hover:bg-transparent hover:text-white transition-colors duration-300"
               >
-                Book a Court
+                Réserver un court
               </Link>
               <Link
                 href="/about"
                 className="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-full hover:bg-white hover:text-gray-900 transition-colors duration-300"
               >
-                Learn More
+                En savoir plus
               </Link>
             </div>
           </div>
@@ -73,25 +70,25 @@ export default function Home() {
               <div className="text-4xl md:text-5xl font-bold text-green-500">
                 24/7
               </div>
-              <div className="text-gray-400">Access</div>
+              <div className="text-gray-400">Accès</div>
             </div>
             <div className="space-y-2">
               <div className="text-4xl md:text-5xl font-bold text-green-500">
                 4+
               </div>
-              <div className="text-gray-400">Pro Courts</div>
+              <div className="text-gray-400">Terrains Pro</div>
             </div>
             <div className="space-y-2">
               <div className="text-4xl md:text-5xl font-bold text-green-500">
-                1st
+                1er
               </div>
-              <div className="text-gray-400">In East Africa</div>
+              <div className="text-gray-400">En Afrique de l'Est</div>
             </div>
             <div className="space-y-2">
               <div className="text-4xl md:text-5xl font-bold text-green-500">
                 500+
               </div>
-              <div className="text-gray-400">Active Players</div>
+              <div className="text-gray-400">Joueurs Actifs</div>
             </div>
           </div>
         </div>
@@ -101,25 +98,26 @@ export default function Home() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-            Why Choose Padel?
+            Pourquoi Choisir le Padel ?
           </h2>
           <div className="grid md:grid-cols-3 gap-12">
             {[
               {
-                title: "Easy to Learn",
+                title: "Facile à Apprendre",
                 description:
-                  "Perfect for beginners, learn the basics in just one session",
+                  "Parfait pour les débutants, apprenez les bases en juste une session",
                 icon: "🎯",
               },
               {
-                title: "Social Sport",
+                title: "Sport Social",
                 description:
-                  "Always played in doubles, making it the ultimate social game",
+                  "Toujours joué en double, ce qui en fait le jeu social ultime",
                 icon: "🤝",
               },
               {
-                title: "All Ages Welcome",
-                description: "Suitable for everyone from kids to seniors",
+                title: "Tous Âges Bienvenus",
+                description:
+                  "Convient à tout le monde, des enfants aux seniors",
                 icon: "👨‍👩‍👧‍👦",
               },
             ].map((feature, index) => (
@@ -142,12 +140,12 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl font-bold mb-6">
-                State-of-the-Art Facilities
+                Installations de Dernière Génération
               </h2>
               <p className="text-gray-300 text-lg mb-8">
-                Our courts feature the latest technology and premium materials
-                for the ultimate playing experience. Book your court instantly
-                through our online system.
+                Nos courts sont équipés de la dernière technologie et de
+                matériaux de qualité premium pour l'expérience de jeu ultime.
+                Réservez votre court instantanément via notre système en ligne.
               </p>
               <div className="space-y-4">
                 {[
@@ -177,7 +175,7 @@ export default function Home() {
             </div>
             <div className="relative h-[400px] rounded-xl overflow-hidden shadow-2xl">
               <Image
-                src="/images/padel-6322450_1280.jpg"
+                src="/images/court-preview.jpg"
                 alt="Padel Court"
                 fill
                 className="object-cover"
@@ -188,8 +186,116 @@ export default function Home() {
                   href="/login"
                   className="inline-flex items-center justify-center w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
                 >
-                  Check Court Availability
+                  Vérifier la Disponibilité des Courts
                 </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Direct Messaging Section */}
+      <section className="py-20 bg-primary-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-center mb-6">
+            Restez Connecté avec les Joueurs
+          </h2>
+          <p className="text-xl text-gray-600 text-center mb-16 max-w-2xl mx-auto">
+            Connectez-vous avec d'autres joueurs instantanément grâce à notre
+            système de messagerie en temps réel. Envoyez des messages à tout
+            moment - ils les recevront lorsqu'ils seront en ligne !
+          </p>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-semibold">
+                    JD
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Jean Dupont</p>
+                    <p className="text-sm text-gray-500">Joueur</p>
+                  </div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+                <p className="text-gray-600">
+                  Voudrais-tu jouer en double demain à 18h ?
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-semibold">
+                    AS
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Alice Smith</p>
+                    <p className="text-sm text-gray-500">Entraîneur</p>
+                  </div>
+                  <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                </div>
+                <p className="text-gray-600">
+                  Votre leçon a été confirmée pour la semaine prochaine !
+                </p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold">Fonctionnalités</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 text-primary-600">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Chat en Temps Réel</p>
+                    <p className="text-gray-600">
+                      Messagerie instantanée avec les joueurs en ligne
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 text-primary-600">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Messages Hors Ligne</p>
+                    <p className="text-gray-600">
+                      Les messages sont sauvegardés et livrés lorsque les
+                      joueurs se connectent
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 text-primary-600">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Easy to Use</p>
+                    <p className="text-gray-600">
+                      Interface simple pour une communication rapide
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -200,24 +306,24 @@ export default function Home() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center mb-16">
-            What Players Say
+            Ce que Disent les Joueurs
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                text: "The facilities are world-class and the community is amazing. I'm addicted!",
+                text: "Les installations sont de classe mondiale et la communauté est incroyable. Je suis accro !",
                 name: "Sarah M.",
-                role: "Regular Player",
+                role: "Joueuse Régulière",
               },
               {
-                text: "As a beginner, I found it incredibly easy to learn and the coaches are excellent.",
-                name: "John D.",
-                role: "New Player",
+                text: "En tant que débutant, j'ai trouvé cela incroyablement facile à apprendre et les entraîneurs sont excellents.",
+                name: "Jean D.",
+                role: "Nouveau Joueur",
               },
               {
-                text: "Best sports facility in Bujumbura. The online booking system is very convenient.",
+                text: "Meilleure installation sportive à Bujumbura. Le système de réservation en ligne est très pratique.",
                 name: "Marie K.",
-                role: "Club Member",
+                role: "Membre du Club",
               },
             ].map((testimonial, index) => (
               <div key={index} className="bg-gray-50 p-8 rounded-xl">
@@ -242,24 +348,25 @@ export default function Home() {
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-8">
-            Ready to Join the Revolution?
+            {" "}
+            Prêt à Rejoindre la Révolution ?
           </h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Experience the excitement of Padel at Burundi's premier sports
-            facility
+            Vivez l'excitation du Padel dans la première installation sportive
+            du Burundi
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/login"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-green-600 text-lg font-semibold rounded-full hover:bg-gray-100 transition-colors"
             >
-              Book Now
+              Reservez Maintenant
             </Link>
             <Link
               href="/contact"
               className="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-full hover:bg-white hover:text-green-600 transition-colors"
             >
-              Contact Us
+              Contactez-Nous
             </Link>
           </div>
         </div>

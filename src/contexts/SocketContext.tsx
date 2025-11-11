@@ -9,7 +9,7 @@ interface SocketContextType {
   isConnected: boolean;
 }
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 

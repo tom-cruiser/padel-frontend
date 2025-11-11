@@ -4,65 +4,89 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import OnlineUsersButton from './OnlineUsersButton';
+import { getConversations } from '@/services/message';
 
 interface Message {
   id: string;
-  content: string;
-  senderId: string;
-  receiverId: string;
+  message: string;
+  fromUserId: string;
+  toUserId: string;
   createdAt: string;
+  isRead: boolean;
+}
+
+interface Conversation {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  unreadCount: number;
 }
 
 export default function MessagesClient() {
   const { user } = useAuth();
-  const socketContext = useSocket();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { socket, isConnected } = useSocket();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Monitor socket connection
   useEffect(() => {
-    if (!socketContext.socket || !socketContext.isConnected) {
-      console.log('Waiting for socket connection...');
+    if (!socket || !isConnected) {
+      console.log('Socket status:', { socket: !!socket, isConnected });
+    } else {
+      console.log('✅ Socket connected and ready');
     }
-  }, [socketContext]);
+  }, [socket, isConnected]);
 
   useEffect(() => {
-    if (!user || !socketContext.socket) {
+    if (!user) {
       setLoading(false);
       return;
     }
 
-    // Listen for new messages
-    socketContext.socket.on('message:received', (newMessage: Message) => {
-      setMessages(prev => [...prev, newMessage]);
-    });
+    // Listen for new messages if socket is available
+    if (socket) {
+      socket.on('message:receive', (newMessage: Message) => {
+        console.log('📨 New message received:', newMessage);
+        // Refresh conversations when new message arrives
+        fetchConversations();
+      });
 
-    // Fetch initial messages
-    const fetchMessages = async () => {
+      socket.on('message:sent', (sentMessage: Message) => {
+        console.log('✅ Message sent confirmation:', sentMessage);
+        // Refresh conversations when message is sent
+        fetchConversations();
+      });
+    }
+
+    // Fetch initial conversations
+    const fetchConversations = async () => {
       try {
-        const response = await fetch('/api/messages');
-        if (!response.ok) {
-          throw new Error('Failed to fetch messages');
-        }
-        const data = await response.json();
-        setMessages(Array.isArray(data) ? data : []);
+        console.log('🔍 Fetching conversations...');
+        const data = await getConversations();
+        console.log('📋 Conversations fetched:', data);
+        setConversations(Array.isArray(data) ? data : []);
         setError(null);
       } catch (error) {
-        console.error('Failed to fetch messages:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch messages');
-        setMessages([]);
+        console.error('❌ Failed to fetch conversations:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch conversations');
+        setConversations([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMessages();
+    fetchConversations();
 
     return () => {
-      socketContext.socket?.off('message:received');
+      if (socket) {
+        socket.off('message:receive');
+        socket.off('message:sent');
+      }
     };
-  }, [user, socketContext.socket]);
+  }, [user, socket]);
 
   if (loading) {
     return (
@@ -72,35 +96,74 @@ export default function MessagesClient() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-8">Messages</h1>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <p className="font-medium">Error loading messages</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8">Messages</h1>
         
-        {!messages ? (
-          <div className="text-center text-gray-500 mt-20">
-            <p className="text-xl">Loading messages...</p>
+        {/* Socket Connection Status */}
+        <div className="mb-6">
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+            isConnected 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            <div className={`w-2 h-2 rounded-full mr-2 ${
+              isConnected ? 'bg-green-500' : 'bg-red-500'
+            }`} />
+            {isConnected ? 'Connected' : 'Disconnected'}
           </div>
-        ) : messages.length === 0 ? (
+        </div>
+        
+        {conversations.length === 0 ? (
           <div className="text-center text-gray-500 mt-20">
-            <p className="text-xl">No messages yet</p>
-            <p className="mt-2">Start a conversation with someone!</p>
+            <div className="text-6xl mb-4">💬</div>
+            <p className="text-xl font-medium">No conversations yet</p>
+            <p className="mt-2">Click the chat button to start messaging with online users!</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {messages?.map((message) => (
+            <h2 className="text-xl font-semibold mb-4">Recent Conversations</h2>
+            {conversations.map((conversation: any) => (
               <div
-                key={message.id}
-                className={`p-4 rounded-lg max-w-2xl ${
-                  message.senderId === user?.id
-                    ? 'ml-auto bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
+                key={conversation.userId || conversation.id}
+                className="bg-white p-4 rounded-lg shadow border hover:shadow-md transition-shadow cursor-pointer"
               >
-                <p>{message.content}</p>
-                <p className="text-sm mt-1 opacity-75">
-                  {new Date(message.createdAt).toLocaleTimeString()}
-                </p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {conversation.firstName && conversation.lastName 
+                        ? `${conversation.firstName} ${conversation.lastName}`
+                        : conversation.name || 'Unknown User'
+                      }
+                    </h3>
+                    <p className="text-gray-600 text-sm mt-1">
+                      {conversation.lastMessage || 'No messages yet'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {conversation.unreadCount > 0 && (
+                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                        {conversation.unreadCount}
+                      </span>
+                    )}
+                    <p className="text-gray-400 text-xs mt-1">
+                      {conversation.lastMessageTime && new Date(conversation.lastMessageTime).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
