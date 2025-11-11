@@ -115,7 +115,10 @@ export default function BookingPage() {
 
       setCourtAvailability((prev) => ({ ...prev, ...availabilityMap }));
     } catch (error) {
-      console.error("Failed to fetch availability for courts", error);
+      console.error(
+        "Échec de la récupération de la disponibilité des terrains",
+        error
+      );
     }
   };
 
@@ -127,7 +130,7 @@ export default function BookingPage() {
         setSelectedCourt(courtsData[0].id);
       }
     } catch (error) {
-      toast.error("Failed to load courts");
+      toast.error("Échec du chargement des terrains");
     } finally {
       setLoading(false);
     }
@@ -137,17 +140,17 @@ export default function BookingPage() {
     e.preventDefault();
 
     if (!selectedCourt) {
-      toast.error("Please select a court");
+      toast.error("Veuillez sélectionner un terrain");
       return;
     }
 
     if (selectedTime === null) {
-      toast.error("Please select a time slot");
+      toast.error("Veuillez sélectionner un créneau horaire");
       return;
     }
 
     if (withCoach && !selectedCoach) {
-      toast.error("Please select a coach");
+      toast.error("Veuillez sélectionner un coach");
       return;
     }
 
@@ -155,7 +158,7 @@ export default function BookingPage() {
 
     try {
       if (selectedTime === null) {
-        toast.error("Please select a time slot");
+        toast.error("Veuillez sélectionner un créneau horaire");
         setSubmitting(false);
         return;
       }
@@ -173,10 +176,11 @@ export default function BookingPage() {
       };
 
       await bookingService.createBooking(bookingData);
-      toast.success("Booking created successfully!");
+      toast.success("Réservation créée avec succès!");
       router.push("/dashboard");
     } catch (error: any) {
-      const message = error.response?.data?.error || "Failed to create booking";
+      const message =
+        error.response?.data?.error || "Échec de la création de la réservation";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -205,15 +209,17 @@ export default function BookingPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                📅 Book a Court
+                📅 Réserver un terrain
               </h1>
-              <p className="text-sm text-gray-600">Reserve your padel court</p>
+              <p className="text-sm text-gray-600">
+                éservez votre court de padel
+              </p>
             </div>
             <button
               onClick={() => router.push("/dashboard")}
               className="btn btn-secondary"
             >
-              ← Back to Dashboard
+              ← Retour au tableau de bord
             </button>
           </div>
         </div>
@@ -225,11 +231,12 @@ export default function BookingPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Court Selection */}
             <div>
-              <label className="label">Select Court *</label>
+              <label className="label">Sélectionner un terrain *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {courts.length === 0 ? (
                   <div className="p-4 border-2 rounded-lg text-center text-gray-500 bg-gray-50">
-                    No courts available. Please contact the administrator.
+                    Aucun terrain disponible. Veuillez contacter
+                    l'administrateur.
                   </div>
                 ) : (
                   ["Blue Padel Court", "Green Padel Court"].map((courtName) => {
@@ -271,7 +278,7 @@ export default function BookingPage() {
 
             {/* Date Selection */}
             <div>
-              <label className="label">Select Date *</label>
+              <label className="label">Sélectionner une date*</label>
               <input
                 type="date"
                 value={selectedDate}
@@ -282,7 +289,7 @@ export default function BookingPage() {
                 required
               />
               <p className="text-sm text-gray-500 mt-1">
-                You can book up to 3 days in advance
+                Vous pouvez réserver jusqu'à 3 jours à l'avance
               </p>
             </div>
 
@@ -338,11 +345,11 @@ export default function BookingPage() {
                                 <div className="text-xs mt-1">
                                   {isBooked ? (
                                     <span className="text-red-500">
-                                      🔴 Booked
+                                      🔴 éservé
                                     </span>
                                   ) : (
                                     <span className="text-green-500">
-                                      🟢 Available
+                                      🟢 Disponible
                                     </span>
                                   )}
                                 </div>
@@ -356,13 +363,14 @@ export default function BookingPage() {
                 )}
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                🟢 Available slots are shown in green, 🔴 booked slots in red
+                🟢 Les créneaux disponibles sont affichés en vert, 🔴 les
+                créneaux réservés en rouge.
               </p>
             </div>
 
             {/* Number of Members */}
             <div>
-              <label className="label">Number of Players *</label>
+              <label className="label">Nombres des joueus *</label>
               <div className="flex items-center gap-4">
                 <button
                   type="button"
@@ -394,7 +402,7 @@ export default function BookingPage() {
                 </button>
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                Maximum 4 players per court
+                Maximum 4 joueurs par terrain
               </p>
             </div>
 
@@ -415,20 +423,20 @@ export default function BookingPage() {
                   htmlFor="withCoach"
                   className="text-sm font-medium text-gray-700"
                 >
-                  I want to book with a coach
+                  Je veux réserver avec un coach
                 </label>
               </div>
 
               {withCoach && (
                 <div className="mt-3">
-                  <label className="label">Select Coach *</label>
+                  <label className="label">Sélectionner un coach *</label>
                   <select
                     value={selectedCoach}
                     onChange={(e) => setSelectedCoach(e.target.value)}
                     className="input"
                     required={withCoach}
                   >
-                    <option value="">-- Choose a coach --</option>
+                    <option value="">-- Choisir un coach --</option>
                     {COACHES.map((coach) => (
                       <option key={coach.id} value={coach.id}>
                         {coach.name} - {coach.specialty}
@@ -443,7 +451,9 @@ export default function BookingPage() {
 
             {/* Additional Notes */}
             <div>
-              <label className="label">Additional Notes (Optional)</label>
+              <label className="label">
+                Remarques supplémentaires (facultatif)
+              </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -456,7 +466,7 @@ export default function BookingPage() {
             {/* Booking Summary */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h3 className="font-semibold text-gray-900 mb-3">
-                📋 Booking Summary
+                📋 Résumé de la réservation
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -480,7 +490,7 @@ export default function BookingPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Players:</span>
+                  <span className="text-gray-600">Joueurs:</span>
                   <span className="font-medium text-gray-900">
                     {numberOfMembers}
                   </span>
@@ -510,7 +520,7 @@ export default function BookingPage() {
                 className="flex-1 btn btn-secondary"
                 disabled={submitting}
               >
-                Cancel
+                Annuler
               </button>
               <button
                 type="submit"
