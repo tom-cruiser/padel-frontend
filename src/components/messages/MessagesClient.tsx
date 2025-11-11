@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import OnlineUsersButton from './OnlineUsersButton';
-import { getConversations } from '@/services/message';
+import { getConversations, type Conversation } from '@/services/message';
 
 interface Message {
   id: string;
@@ -13,15 +13,6 @@ interface Message {
   toUserId: string;
   createdAt: string;
   isRead: boolean;
-}
-
-interface Conversation {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unreadCount: number;
 }
 
 export default function MessagesClient() {
@@ -136,21 +127,18 @@ export default function MessagesClient() {
         ) : (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold mb-4">Recent Conversations</h2>
-            {conversations.map((conversation: any) => (
+            {conversations.map((conversation) => (
               <div
-                key={conversation.userId || conversation.id}
+                key={conversation.user.id}
                 className="bg-white p-4 rounded-lg shadow border hover:shadow-md transition-shadow cursor-pointer"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-gray-900">
-                      {conversation.firstName && conversation.lastName 
-                        ? `${conversation.firstName} ${conversation.lastName}`
-                        : conversation.name || 'Unknown User'
-                      }
+                      {`${conversation.user.firstName} ${conversation.user.lastName}`}
                     </h3>
                     <p className="text-gray-600 text-sm mt-1">
-                      {conversation.lastMessage || 'No messages yet'}
+                      {conversation.lastMessage?.message || 'No messages yet'}
                     </p>
                   </div>
                   <div className="text-right">
@@ -160,7 +148,7 @@ export default function MessagesClient() {
                       </span>
                     )}
                     <p className="text-gray-400 text-xs mt-1">
-                      {conversation.lastMessageTime && new Date(conversation.lastMessageTime).toLocaleDateString()}
+                      {conversation.lastMessage?.timestamp && new Date(conversation.lastMessage.timestamp).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
