@@ -29,9 +29,11 @@ export default function LoginPage() {
         <div className="card">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              🎾 Padel Court Booking
+              🎾 Réservation de court de padel
             </h1>
-            <p className="text-gray-600">Sign in to book your court</p>
+            <p className="text-gray-600">
+              Connectez-vous pour réserver votre court
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -76,12 +78,12 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
+              Vous n'avez pas de compte ?{" "}
               <Link
                 href="/register"
                 className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                Register here
+                Inscrivez-vous ici
               </Link>
             </p>
             <p className="text-sm text-gray-600 mt-2">
@@ -89,7 +91,7 @@ export default function LoginPage() {
                 href="/"
                 className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                Back to Home
+                Retour à l'accueil
               </Link>
             </p>
           </div>

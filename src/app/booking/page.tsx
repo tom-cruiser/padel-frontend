@@ -18,13 +18,13 @@ const TIME_SLOTS = [
   { hour: 7.0, label: "7:00 AM - 8:30 AM" },
   { hour: 8.5, label: "8:30 AM - 10:00 AM" },
   { hour: 10.0, label: "10:00 AM - 11:30 AM" },
-  { hour: 11.5, label: "11:30 AM - 1:00 PM" },
-  { hour: 13.0, label: "1:00 PM - 2:30 PM" },
-  { hour: 14.5, label: "2:30 PM - 4:00 PM" },
-  { hour: 16.0, label: "4:00 PM - 5:30 PM" },
-  { hour: 17.5, label: "5:30 PM - 7:00 PM" },
-  { hour: 19.0, label: "7:00 PM - 8:30 PM" },
-  { hour: 20.5, label: "8:30 PM - 10:00 PM" },
+  { hour: 11.5, label: "11:30 AM - 13:00 PM" },
+  { hour: 13.0, label: "13:00 PM - 14:30 PM" },
+  { hour: 14.5, label: "14:30 PM - 16:00 PM" },
+  { hour: 16.0, label: "16:00 PM - 17:30 PM" },
+  { hour: 17.5, label: "17:30 PM - 19:00 PM" },
+  { hour: 19.0, label: "19:00 PM - 20:30 PM" },
+  { hour: 20.5, label: "20:30 PM - 22:00 PM" },
 ];
 
 const COACHES: Coach[] = [
@@ -212,7 +212,7 @@ export default function BookingPage() {
                 📅 Réserver un terrain
               </h1>
               <p className="text-sm text-gray-600">
-                éservez votre court de padel
+                Réservez votre court de padel
               </p>
             </div>
             <button
@@ -295,7 +295,7 @@ export default function BookingPage() {
 
             {/* Time Slot Selection */}
             <div>
-              <label className="label">Select Time Slot *</label>
+              <label className="label">Choisir un créneau horaire</label>
               {/* Show time slots side-by-side for Blue and Green courts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(["Blue Padel Court", "Green Padel Court"] as string[]).map(
@@ -345,7 +345,7 @@ export default function BookingPage() {
                                 <div className="text-xs mt-1">
                                   {isBooked ? (
                                     <span className="text-red-500">
-                                      🔴 éservé
+                                      🔴 Réservé
                                     </span>
                                   ) : (
                                     <span className="text-green-500">
