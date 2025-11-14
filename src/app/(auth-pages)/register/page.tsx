@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    language: 'en',
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    language: "en",
   });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -28,7 +28,9 @@ export default function RegisterPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -41,16 +43,16 @@ export default function RegisterPage() {
         <div className="card">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Create Account
+              Créer un Compte
             </h1>
-            <p className="text-gray-600">Join our padel court community</p>
+            <p className="text-gray-600">Rejoignez notre communauté de Padel</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="label">
-                  First Name
+                  Prénom
                 </label>
                 <input
                   id="firstName"
@@ -65,7 +67,7 @@ export default function RegisterPage() {
 
               <div>
                 <label htmlFor="lastName" className="label">
-                  Last Name
+                  Nom de famille
                 </label>
                 <input
                   id="lastName"
@@ -112,7 +114,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label htmlFor="language" className="label">
                 Preferred Language
               </label>
@@ -126,27 +128,33 @@ export default function RegisterPage() {
                 <option value="en">English</option>
                 <option value="fr">Français</option>
               </select>
-            </div>
+            </div> */}
 
             <button
               type="submit"
               disabled={loading}
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? "Création du compte..." : "Créer un compte"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
-                Sign in here
+              Vous avez déjà un compte ?{" "}
+              <Link
+                href="/login"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Connectez-vous ici
               </Link>
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium">
-                Back to Home
+              <Link
+                href="/"
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Retour à l'accueil
               </Link>
             </p>
           </div>
