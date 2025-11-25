@@ -183,11 +183,11 @@ export function Navbar() {
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar
-                    alt={`${user.firstName} ${user.lastName}`}
-                    src={user.avatar || undefined}
+                    alt={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`}
+                    src={user?.avatar || undefined}
                   >
-                    {user.firstName[0]}
-                    {user.lastName[0]}
+                    {user?.firstName?.charAt(0) ?? user?.email?.charAt(0) ?? ""}
+                    {user?.lastName?.charAt(0) ?? ""}
                   </Avatar>
                 </IconButton>
               </Tooltip>
